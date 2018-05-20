@@ -1,6 +1,9 @@
 #include "cinder/app/App.h"
 #include "cinder/app/RendererGl.h"
 #include "cinder/gl/gl.h"
+#include "cinder/Log.h"
+
+#include "portaudio.h"
 
 extern int paex_saw_main();
 
@@ -11,6 +14,7 @@ using namespace std;
 class PortAudioRepoExamplesApp : public App {
   public:
 	void setup() override;
+	void printInfo();
 	void mouseDown( MouseEvent event ) override;
 	void update() override;
 	void draw() override;
@@ -18,7 +22,21 @@ class PortAudioRepoExamplesApp : public App {
 
 void PortAudioRepoExamplesApp::setup()
 {
-	paex_saw_main();
+	//paex_saw_main();
+
+	printInfo();
+}
+
+void PortAudioRepoExamplesApp::printInfo()
+{
+	PaError err = Pa_Initialize();
+
+	int numHosts = Pa_GetHostApiCount();
+	int defaultHostIndex = Pa_GetDefaultHostApi();
+
+	auto defaultHost = Pa_GetHostApiInfo( defaultHostIndex );
+
+	CI_LOG_I( "numHosts: " << numHosts << ", default name: " << defaultHost->name );
 }
 
 void PortAudioRepoExamplesApp::mouseDown( MouseEvent event )

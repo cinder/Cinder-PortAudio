@@ -1,6 +1,5 @@
-# Rocket sync tracks
-*.track
-
+# Ignore ASIO sdk
+lib/ASIOSDK
 
 # Mac OS X cruft
 *.pbxuser
@@ -44,9 +43,3 @@ docs/doxygen/cinder.tag
 
 # Sublime Text
 *.sublime-workspace
-
-# dart
-.pub
-pubspec.lock
-vector_math
-test/MasonTests/assets/wisps/packages/cinder

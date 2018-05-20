@@ -2,6 +2,10 @@
 #include "cinder/app/RendererGl.h"
 #include "cinder/gl/gl.h"
 
+extern "C" {
+int paex_saw_main( void );
+}
+
 using namespace ci;
 using namespace ci::app;
 using namespace std;
@@ -16,6 +20,7 @@ class PortAudioRepoExamplesApp : public App {
 
 void PortAudioRepoExamplesApp::setup()
 {
+	paex_saw_main();
 }
 
 void PortAudioRepoExamplesApp::mouseDown( MouseEvent event )

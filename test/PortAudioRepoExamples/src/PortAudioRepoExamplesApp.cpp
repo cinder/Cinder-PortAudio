@@ -2,9 +2,7 @@
 #include "cinder/app/RendererGl.h"
 #include "cinder/gl/gl.h"
 
-extern "C" {
-int paex_saw_main( void );
-}
+extern int paex_saw_main();
 
 using namespace ci;
 using namespace ci::app;

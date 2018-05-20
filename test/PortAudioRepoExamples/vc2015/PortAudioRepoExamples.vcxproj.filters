@@ -114,14 +114,11 @@
     <ClCompile Include="..\..\..\lib\portaudio\src\os\win\pa_x86_plain_converters.c">
       <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\src\os</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\paex_saw.c">
+    <ClCompile Include="..\src\paex_saw.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\Resources.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\lib\portaudio\include\pa_asio.h">
       <Filter>Blocks\Cinder-PortAudio\lib\portaudio\include</Filter>
     </ClInclude>

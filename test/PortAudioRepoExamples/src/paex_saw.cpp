@@ -44,8 +44,13 @@
 #include <stdio.h>
 #include <math.h>
 #include "portaudio.h"
+
+#include "cinder/Log.h"
+
 #define NUM_SECONDS   (4)
 #define SAMPLE_RATE   (44100)
+
+
 
 typedef struct
 {
@@ -93,12 +98,13 @@ int paex_saw_main(void)
     PaStream *stream;
     PaError err;
     
-    printf("PortAudio Test: output sawtooth wave.\n");
+    CI_LOG_I("PortAudio Test: output sawtooth wave.");
     /* Initialize our data for use by callback. */
     data.left_phase = data.right_phase = 0.0;
     /* Initialize library before making any other calls. */
     err = Pa_Initialize();
-    if( err != paNoError ) goto error;
+    if( err != paNoError )
+		goto error;
     
     /* Open an audio I/O stream. */
     err = Pa_OpenDefaultStream( &stream,
@@ -109,25 +115,30 @@ int paex_saw_main(void)
                                 256,        /* frames per buffer */
                                 patestCallback,
                                 &data );
-    if( err != paNoError ) goto error;
+    if( err != paNoError )
+		goto error;
 
     err = Pa_StartStream( stream );
-    if( err != paNoError ) goto error;
+    if( err != paNoError )
+		goto error;
 
     /* Sleep for several seconds. */
     Pa_Sleep(NUM_SECONDS*1000);
 
     err = Pa_StopStream( stream );
-    if( err != paNoError ) goto error;
+    if( err != paNoError )
+		goto error;
     err = Pa_CloseStream( stream );
-    if( err != paNoError ) goto error;
+    if( err != paNoError )
+		goto error;
     Pa_Terminate();
-    printf("Test finished.\n");
+
+    CI_LOG_I( "Test finished." );
     return err;
 error:
     Pa_Terminate();
-    fprintf( stderr, "An error occured while using the portaudio stream\n" );
-    fprintf( stderr, "Error number: %d\n", err );
-    fprintf( stderr, "Error message: %s\n", Pa_GetErrorText( err ) );
+    CI_LOG_E( "An error occured while using the portaudio stream" );
+	CI_LOG_E( "Error number: " << err );
+	CI_LOG_E( "Error message: " << Pa_GetErrorText( err ) );
     return err;
 }

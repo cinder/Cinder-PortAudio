@@ -1,0 +1,52 @@
+# Rocket sync tracks
+*.track
+
+
+# Mac OS X cruft
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.user
+project.xcworkspace
+xcuserdata/
+*.xccheckout
+*.xcscmblueprint
+.DS_Store
+
+build/
+
+# Windows cruft
+*.suo
+*.ncb
+*.sdf
+*.VC.opendb
+*.VC.db
+*.opensdf
+Debug/
+Release/
+Debug_Shared/
+Release_Shared/
+Debug_ANGLE/
+Release_ANGLE/
+Debug_Shared/
+Release_Shared/
+ipch/
+.vs
+**/vc2013/enc_temp_folder/**
+**/vc2015/enc_temp_folder/**
+
+# Jetbrains IDEs
+.idea
+
+# doxygen generated files
+docs/html
+docs/doxygen/cinder.tag
+
+# Sublime Text
+*.sublime-workspace
+
+# dart
+.pub
+pubspec.lock
+vector_math
+test/MasonTests/assets/wisps/packages/cinder

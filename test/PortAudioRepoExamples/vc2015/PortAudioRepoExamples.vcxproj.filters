@@ -43,6 +43,15 @@
     <Filter Include="Blocks\Cinder-PortAudio\lib\portaudio\src\src\os">
       <UniqueIdentifier>{ff1773c6-105e-4d87-a90e-79b02cc85e2c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Blocks\Cinder-PortAudio\src">
+      <UniqueIdentifier>{6a94376e-f86f-4c8a-b511-9a1922ed4792}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\Cinder-PortAudio\src\cinder">
+      <UniqueIdentifier>{7d58b76f-d937-48a4-81a3-7ca9f3aafe71}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\Cinder-PortAudio\src\cinder\audio">
+      <UniqueIdentifier>{3d9b97ee-4bcd-483c-aea9-01764110aefd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PortAudioRepoExamplesApp.cpp">
@@ -117,6 +126,9 @@
     <ClCompile Include="..\src\paex_saw.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\cinder\audio\ContextPortAudio.cpp">
+      <Filter>Blocks\Cinder-PortAudio\src\cinder\audio</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\lib\portaudio\include\pa_asio.h">
@@ -181,6 +193,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\lib\portaudio\src\os\win\pa_x86_plain_converters.h">
       <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\src\os</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\cinder\audio\ContextPortAudio.h">
+      <Filter>Blocks\Cinder-PortAudio\src\cinder\audio</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

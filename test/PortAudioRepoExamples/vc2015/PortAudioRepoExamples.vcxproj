@@ -79,7 +79,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\..\..\..\include;..\..\..\lib\portaudio\include;..\..\..\lib\portaudio\src\common;..\..\..\lib\portaudio\src\os\win;..\..\..\lib\ASIOSDK\common;..\..\..\lib\ASIOSDK\host;..\..\..\lib\ASIOSDK\host\pc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\..\..\include;..\..\..\lib\portaudio\include;..\..\..\lib\portaudio\src\common;..\..\..\lib\portaudio\src\os\win;..\..\..\lib\ASIOSDK\common;..\..\..\lib\ASIOSDK\host;..\..\..\lib\ASIOSDK\host\pc</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WIN32_WINNT=0x0601;_WINDOWS;NOMINMAX;PA_USE_WASAPI=1;PA_USE_ASIO=0;PA_LOG_API_CALLS=1;PA_ENABLE_MSVC_DEBUG_OUTPUT;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -106,7 +106,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\..\..\..\include;..\..\..\lib\portaudio\include;..\..\..\lib\portaudio\src\common;..\..\..\lib\portaudio\src\os\win;..\..\..\lib\ASIOSDK\common;..\..\..\lib\ASIOSDK\host;..\..\..\lib\ASIOSDK\host\pc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\..\..\include;..\..\..\lib\portaudio\include;..\..\..\lib\portaudio\src\common;..\..\..\lib\portaudio\src\os\win;..\..\..\lib\ASIOSDK\common;..\..\..\lib\ASIOSDK\host;..\..\..\lib\ASIOSDK\host\pc</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WIN32_WINNT=0x0601;_WINDOWS;NOMINMAX;PA_USE_WASAPI=1;PA_USE_ASIO=0;PA_LOG_API_CALLS=1;PA_ENABLE_MSVC_DEBUG_OUTPUT;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -131,7 +131,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\..\..\..\include;..\..\..\lib\portaudio\include;..\..\..\lib\portaudio\src\common;..\..\..\lib\portaudio\src\os\win;..\..\..\lib\ASIOSDK\common;..\..\..\lib\ASIOSDK\host;..\..\..\lib\ASIOSDK\host\pc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\..\..\include;..\..\..\lib\portaudio\include;..\..\..\lib\portaudio\src\common;..\..\..\lib\portaudio\src\os\win;..\..\..\lib\ASIOSDK\common;..\..\..\lib\ASIOSDK\host;..\..\..\lib\ASIOSDK\host\pc</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WIN32_WINNT=0x0601;_WINDOWS;NOMINMAX;PA_USE_WASAPI=1;PA_USE_ASIO=0;PA_LOG_API_CALLS=1;PA_ENABLE_MSVC_DEBUG_OUTPUT;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PrecompiledHeader />
@@ -160,7 +160,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\..\..\..\include;..\..\..\lib\portaudio\include;..\..\..\lib\portaudio\src\common;..\..\..\lib\portaudio\src\os\win;..\..\..\lib\ASIOSDK\common;..\..\..\lib\ASIOSDK\host;..\..\..\lib\ASIOSDK\host\pc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\..\..\include;..\..\..\lib\portaudio\include;..\..\..\lib\portaudio\src\common;..\..\..\lib\portaudio\src\os\win;..\..\..\lib\ASIOSDK\common;..\..\..\lib\ASIOSDK\host;..\..\..\lib\ASIOSDK\host\pc</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WIN32_WINNT=0x0601;_WINDOWS;NOMINMAX;PA_USE_WASAPI=1;PA_USE_ASIO=0;PA_LOG_API_CALLS=1;PA_ENABLE_MSVC_DEBUG_OUTPUT;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PrecompiledHeader />
@@ -208,6 +208,7 @@
     <ClInclude Include="..\..\..\lib\portaudio\src\os\win\pa_win_coinitialize.h" />
     <ClInclude Include="..\..\..\lib\portaudio\src\os\win\pa_win_wdmks_utils.h" />
     <ClInclude Include="..\..\..\lib\portaudio\src\os\win\pa_x86_plain_converters.h" />
+    <ClInclude Include="..\..\..\src\cinder\audio\ContextPortAudio.h" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
@@ -232,6 +233,7 @@
     <ClCompile Include="..\..\..\lib\portaudio\src\os\win\pa_win_waveformat.c" />
     <ClCompile Include="..\..\..\lib\portaudio\src\os\win\pa_win_wdmks_utils.c" />
     <ClCompile Include="..\..\..\lib\portaudio\src\os\win\pa_x86_plain_converters.c" />
+    <ClCompile Include="..\..\..\src\cinder\audio\ContextPortAudio.cpp" />
     <ClCompile Include="..\src\paex_saw.cpp" />
     <ClCompile Include="..\src\PortAudioRepoExamplesApp.cpp" />
   </ItemGroup>

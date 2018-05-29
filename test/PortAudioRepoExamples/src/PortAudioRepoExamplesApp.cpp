@@ -30,13 +30,28 @@ void PortAudioRepoExamplesApp::setup()
 void PortAudioRepoExamplesApp::printInfo()
 {
 	PaError err = Pa_Initialize();
+	CI_ASSERT( err == paNoError );
 
-	int numHosts = Pa_GetHostApiCount();
-	int defaultHostIndex = Pa_GetDefaultHostApi();
+	PaHostApiIndex numHosts = Pa_GetHostApiCount();
+	PaHostApiIndex defaultHostIndex = Pa_GetDefaultHostApi();
 
 	auto defaultHost = Pa_GetHostApiInfo( defaultHostIndex );
 
 	CI_LOG_I( "numHosts: " << numHosts << ", default name: " << defaultHost->name );
+	for( PaHostApiIndex i = 0; i < numHosts; i++ ) {
+		auto host = Pa_GetHostApiInfo( i );
+		CI_LOG_I( "host index: " << i << ", PaHostApiTypeId: " << host->type << ", name: " << host->name << ", device count: " << host->deviceCount );
+	}
+
+	PaDeviceIndex numDevices = Pa_GetDeviceCount();
+	CI_LOG_I( "numDevices: " << numDevices );
+	for( PaDeviceIndex i = 0; i < numDevices; i++ ) {
+		auto dev = Pa_GetDeviceInfo( i );
+		CI_LOG_I( "device index: " << i << ", host api: " << dev->hostApi << ", name: " << dev->name << ", input channels: " << dev->maxInputChannels
+			<< ", output channels" << dev->maxOutputChannels << ", samplerate: " << dev->defaultSampleRate
+			<< ", latency (low): [" << dev->defaultLowInputLatency << ", " << dev->defaultLowOutputLatency << "]"
+			<< ", latency (high): [" << dev->defaultHighInputLatency << ", " << dev->defaultHighOutputLatency << "]" );
+	}
 }
 
 void PortAudioRepoExamplesApp::mouseDown( MouseEvent event )

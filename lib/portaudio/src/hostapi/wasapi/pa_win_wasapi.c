@@ -60,11 +60,11 @@
 	#define COBJMACROS
 	#include <Audioclient.h>
 	#include <endpointvolume.h>
-	#define INITGUID // Avoid additional linkage of static libs, excessive code will be optimized out by the compiler
+	//#define INITGUID // Avoid additional linkage of static libs, excessive code will be optimized out by the compiler
 	#include <mmdeviceapi.h>
 	#include <functiondiscoverykeys.h>
     #include <devicetopology.h>	// Used to get IKsJackDescription interface
-	#undef INITGUID
+	//#undef INITGUID
 #endif
 #ifndef __MWERKS__
 	#include <malloc.h>

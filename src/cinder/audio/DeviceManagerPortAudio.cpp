@@ -24,14 +24,20 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "cinder/audio/DeviceManagerPortAudio.h"
 #include "cinder/Log.h"
 
+#include "portaudio.h"
+
 namespace cinder { namespace audio {
 
 DeviceManagePortAudio::DeviceManagePortAudio()
 {
+	PaError err = Pa_Initialize();
+	CI_ASSERT( err == paNoError );
 }
 
 DeviceManagePortAudio::~DeviceManagePortAudio()
 {
+	PaError err = Pa_Terminate();
+	CI_ASSERT( err == paNoError );
 }
 
 DeviceRef DeviceManagePortAudio::getDefaultOutput()

@@ -129,6 +129,9 @@
     <ClCompile Include="..\..\..\src\cinder\audio\ContextPortAudio.cpp">
       <Filter>Blocks\Cinder-PortAudio\src\cinder\audio</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\cinder\audio\DeviceManagerPortAudio.cpp">
+      <Filter>Blocks\Cinder-PortAudio\src\cinder\audio</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\lib\portaudio\include\pa_asio.h">
@@ -195,6 +198,9 @@
       <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\src\os</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\cinder\audio\ContextPortAudio.h">
+      <Filter>Blocks\Cinder-PortAudio\src\cinder\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\cinder\audio\DeviceManagerPortAudio.h">
       <Filter>Blocks\Cinder-PortAudio\src\cinder\audio</Filter>
     </ClInclude>
   </ItemGroup>

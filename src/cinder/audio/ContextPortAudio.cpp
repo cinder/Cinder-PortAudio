@@ -24,6 +24,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "cinder/audio/ContextPortAudio.h"
 #include "cinder/Log.h"
 
+#include "portaudio.h"
+
 using namespace std;
 using namespace ci;
 
@@ -36,26 +38,32 @@ namespace cinder { namespace audio {
 OutputDeviceNodePortAudio::OutputDeviceNodePortAudio( const DeviceRef &device, const Format &format )
 	: OutputDeviceNode( device, format )
 {
+	CI_LOG_I( "bang" );
 }
 
 OutputDeviceNodePortAudio::~OutputDeviceNodePortAudio()
 {
+	CI_LOG_I( "bang" );
 }
 
 void OutputDeviceNodePortAudio::initialize()
 {
+	CI_LOG_I( "bang" );
 }
 
 void OutputDeviceNodePortAudio::uninitialize()
 {
+	CI_LOG_I( "bang" );
 }
 
 void OutputDeviceNodePortAudio::enableProcessing()
 {
+	CI_LOG_I( "bang" );
 }
 
 void OutputDeviceNodePortAudio::disableProcessing()
 {
+	CI_LOG_I( "bang" );
 }
 
 // ----------------------------------------------------------------------------------------------------
@@ -64,6 +72,14 @@ void OutputDeviceNodePortAudio::disableProcessing()
 
 ContextPortAudio::ContextPortAudio()
 {
+	PaError err = Pa_Initialize();
+	CI_ASSERT( err == paNoError );
+}
+
+ContextPortAudio::~ContextPortAudio()
+{
+	PaError err = Pa_Terminate();
+	CI_ASSERT( err == paNoError );
 }
 
 OutputDeviceNodeRef	ContextPortAudio::createOutputDeviceNode( const DeviceRef &device, const Node::Format &format )

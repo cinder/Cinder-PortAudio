@@ -3,6 +3,10 @@
 #include "cinder/gl/gl.h"
 #include "cinder/Log.h"
 #include "cinder/Rand.h"
+#include "cinder/audio/audio.h"
+
+#include "cinder/audio/ContextPortAudio.h"
+#include "cinder/audio/DeviceManagerPortAudio.h"
 
 #include "portaudio.h"
 
@@ -21,17 +25,18 @@ class PortAudioRepoExamplesApp : public App {
 
 	void printInfo();
 	void testOpenStream();
+	void testContext();
 
 	PaStream *mStream = nullptr;
 };
 
 void PortAudioRepoExamplesApp::setup()
 {
-	//printInfo();
+	printInfo();
+	//paex_saw_main();	
+	//testOpenStream();
 
-	//paex_saw_main();
-	
-	testOpenStream();
+	testContext();
 }
 
 void PortAudioRepoExamplesApp::printInfo()
@@ -61,6 +66,8 @@ void PortAudioRepoExamplesApp::printInfo()
 	}
 
 	CI_LOG_I( "default input: " << Pa_GetDefaultInputDevice() << ", default output: " << Pa_GetDefaultOutputDevice() );
+
+	Pa_Terminate();
 }
 
 static int noiseCallback( const void *inputBuffer, void *outputBuffer, unsigned long framesPerBuffer, const PaStreamCallbackTimeInfo* timeInfo, PaStreamCallbackFlags statusFlags, void *userData )
@@ -110,8 +117,24 @@ void PortAudioRepoExamplesApp::testOpenStream()
 	CI_ASSERT( err == paNoError );
 }
 
+void PortAudioRepoExamplesApp::testContext()
+{
+	// make context / dev manager and set as master
+	// TODO: document that the Context owns these
+	audio::Context::setMaster( new audio::ContextPortAudio, new audio::DeviceManagePortAudio );
+
+	auto genNode = audio::master()->makeNode<audio::GenSineNode>();
+	auto gainNode = audio::master()->makeNode<audio::GainNode>( 0.5f );
+
+	genNode >> gainNode >> audio::master()->getOutput();
+
+	audio::master()->enable();
+
+}
+
 void PortAudioRepoExamplesApp::mouseDown( MouseEvent event )
 {
+#if 0
 	if( ! mStream )
 		return;
 
@@ -121,6 +144,7 @@ void PortAudioRepoExamplesApp::mouseDown( MouseEvent event )
 	CI_ASSERT( err == paNoError );
 
 	mStream = nullptr;
+#endif
 }
 
 void PortAudioRepoExamplesApp::update()

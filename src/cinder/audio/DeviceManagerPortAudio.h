@@ -52,14 +52,21 @@ class DeviceManagePortAudio : public DeviceManager {
 
 
   private:
+
+	// TODO: cleanup
 	struct DeviceInfo {
-		std::string mKey;						//! mKey used by Device to get more info from manager
+		int		mPaDeviceIndex;
+		int		mPaHostindex;
 		std::string mName;						//! friendly mName
-		enum Usage { INPUT, OUTPUT } mUsage;
-		//std::wstring			mEndpointId;		//! id used by Wasapi / MMDevice
-		unsigned long			mState;
-		size_t mNumChannels, mSampleRate, mFramesPerBlock;
+		std::string mKey;						//! mKey used by Device to get more info from manager
+		//enum Usage { INPUT, OUTPUT } mUsage; // TODO: I think this could be input, output, or duplex
+
+		size_t mNumInputChannels, mNumOutputChannels, mSampleRate, mFramesPerBlock;
 	};
+
+	DeviceRef findDeviceByPaIndex( int index );
+	DeviceInfo& getDeviceInfo( const DeviceRef &device );
+	void rebuildDevices();
 
 	std::map<DeviceRef, DeviceInfo> mDeviceInfoSet;
 };

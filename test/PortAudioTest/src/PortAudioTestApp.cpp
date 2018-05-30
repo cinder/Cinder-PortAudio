@@ -19,9 +19,11 @@ using namespace std;
 class PortAudioTestApp : public App {
   public:
 	void setup() override;
-	void mouseDown( MouseEvent event ) override;
 	void update() override;
 	void draw() override;
+
+	void keyDown( KeyEvent event ) override;
+	void mouseDown( MouseEvent event ) override;
 
 	void printInfo();
 	void testOpenStream();
@@ -145,6 +147,13 @@ void PortAudioTestApp::mouseDown( MouseEvent event )
 
 	mStream = nullptr;
 #endif
+}
+
+void PortAudioTestApp::keyDown( KeyEvent event )
+{
+	if( event.getChar() == 'd' ) {
+		CI_LOG_I( "devices:\n" << audio::Device::printDevicesToString() );
+	}
 }
 
 void PortAudioTestApp::update()

@@ -26,7 +26,13 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include "portaudio.h"
 
+using namespace std;
+
 namespace cinder { namespace audio {
+
+// ----------------------------------------------------------------------------------------------------
+// DeviceManagePortAudio
+// ----------------------------------------------------------------------------------------------------
 
 DeviceManagePortAudio::DeviceManagePortAudio()
 {
@@ -42,61 +48,111 @@ DeviceManagePortAudio::~DeviceManagePortAudio()
 
 DeviceRef DeviceManagePortAudio::getDefaultOutput()
 {
-	CI_ASSERT_NOT_REACHABLE();
-	return {};
+	PaDeviceIndex devIndex = Pa_GetDefaultOutputDevice();
+	return findDeviceByPaIndex( devIndex );
 }
 
 DeviceRef DeviceManagePortAudio::getDefaultInput()
 {
-	CI_ASSERT_NOT_REACHABLE();
-	return {};
+	PaDeviceIndex devIndex = Pa_GetDefaultInputDevice();
+	return findDeviceByPaIndex( devIndex );
 }
 
 const std::vector<DeviceRef>& DeviceManagePortAudio::getDevices()
 {
-	CI_ASSERT_NOT_REACHABLE();
-	// TODO: build devices
+	if( mDevices.empty() ) {
+		rebuildDevices();
+	}
 	return mDevices;
 }
 
 std::string DeviceManagePortAudio::getName( const DeviceRef &device )
 {
-	CI_ASSERT_NOT_REACHABLE();
-	return {};
+	return getDeviceInfo( device ).mName;
 }
 
 size_t DeviceManagePortAudio::getNumInputChannels( const DeviceRef &device )
 {
-	CI_ASSERT_NOT_REACHABLE();
-	return {};
+	return getDeviceInfo( device ).mNumInputChannels;
 }
 
 size_t DeviceManagePortAudio::getNumOutputChannels( const DeviceRef &device )
 {
-	CI_ASSERT_NOT_REACHABLE();
-	return {};
+	return getDeviceInfo( device ).mNumOutputChannels;
 }
 
 size_t DeviceManagePortAudio::getSampleRate( const DeviceRef &device )
 {
-	CI_ASSERT_NOT_REACHABLE();
-	return {};
+	return getDeviceInfo( device ).mSampleRate;
 }
 
 size_t DeviceManagePortAudio::getFramesPerBlock( const DeviceRef &device )
 {
-	CI_ASSERT_NOT_REACHABLE();
-	return {};
+	return getDeviceInfo( device ).mFramesPerBlock;
 }
 
 void DeviceManagePortAudio::setSampleRate( const DeviceRef &device, size_t sampleRate )
 {
+	// TODO
 	CI_ASSERT_NOT_REACHABLE();
 }
 
 void DeviceManagePortAudio::setFramesPerBlock( const DeviceRef &device, size_t framesPerBlock )
 {
+	// TODO
 	CI_ASSERT_NOT_REACHABLE();
+}
+
+// ----------------------------------------------------------------------------------------------------
+// DeviceManagePortAudio Private
+// ----------------------------------------------------------------------------------------------------
+
+DeviceRef DeviceManagePortAudio::findDeviceByPaIndex( int index )
+{
+	if( mDeviceInfoSet.empty() )
+		rebuildDevices();
+
+	for( const auto &mp : mDeviceInfoSet ) {
+		if( mp.second.mPaDeviceIndex == index )
+			return mp.first;
+	}
+
+	CI_ASSERT_NOT_REACHABLE();
+	return {};
+}
+
+DeviceManagePortAudio::DeviceInfo& DeviceManagePortAudio::getDeviceInfo( const DeviceRef &device )
+{
+	return mDeviceInfoSet.at( device );
+}
+
+void DeviceManagePortAudio::rebuildDevices()
+{
+	mDeviceInfoSet.clear();
+
+	PaDeviceIndex numDevices = Pa_GetDeviceCount();
+	CI_LOG_I( "numDevices: " << numDevices );
+	for( PaDeviceIndex i = 0; i < numDevices; i++ ) {
+		DeviceInfo devInfo;
+		auto devInfoPa = Pa_GetDeviceInfo( i );
+		auto hostInfoPa = Pa_GetHostApiInfo( devInfoPa->hostApi );
+
+		devInfo.mPaDeviceIndex = i;
+		devInfo.mPaHostindex = devInfoPa->hostApi;
+		devInfo.mName = devInfoPa->name;
+		devInfo.mKey = to_string( (int)i ) + " - " + hostInfoPa->name + " - " + devInfo.mName;
+		devInfo.mNumInputChannels = devInfoPa->maxInputChannels;
+		devInfo.mNumOutputChannels = devInfoPa->maxOutputChannels;
+		devInfo.mSampleRate = devInfoPa->defaultSampleRate;
+
+		// TODO: need to decide if this should be high, low, input or output
+		devInfo.mFramesPerBlock = devInfo.mNumOutputChannels > 0 ? devInfoPa->defaultHighOutputLatency : devInfoPa->defaultHighInputLatency;
+
+
+		// TODO: how does DeviceRef get its properties set? check wasapi
+		DeviceRef addedDevice = addDevice( devInfo.mKey );
+		mDeviceInfoSet.insert( make_pair( addedDevice, devInfo ) );
+	}
 }
 
 } } // namespace cinder::audio

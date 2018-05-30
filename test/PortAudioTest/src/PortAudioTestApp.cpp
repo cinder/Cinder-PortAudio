@@ -16,7 +16,7 @@ using namespace ci;
 using namespace ci::app;
 using namespace std;
 
-class PortAudioRepoExamplesApp : public App {
+class PortAudioTestApp : public App {
   public:
 	void setup() override;
 	void mouseDown( MouseEvent event ) override;
@@ -30,7 +30,7 @@ class PortAudioRepoExamplesApp : public App {
 	PaStream *mStream = nullptr;
 };
 
-void PortAudioRepoExamplesApp::setup()
+void PortAudioTestApp::setup()
 {
 	printInfo();
 	//paex_saw_main();	
@@ -39,7 +39,7 @@ void PortAudioRepoExamplesApp::setup()
 	testContext();
 }
 
-void PortAudioRepoExamplesApp::printInfo()
+void PortAudioTestApp::printInfo()
 {
 	PaError err = Pa_Initialize();
 	CI_ASSERT( err == paNoError );
@@ -88,7 +88,7 @@ static int noiseCallback( const void *inputBuffer, void *outputBuffer, unsigned 
 	return paContinue;
 }
 
-void PortAudioRepoExamplesApp::testOpenStream()
+void PortAudioTestApp::testOpenStream()
 {
 	PaDeviceIndex realtekWasapiIndex = 2;
 	const unsigned long framesPerBuffer = 256;
@@ -117,7 +117,7 @@ void PortAudioRepoExamplesApp::testOpenStream()
 	CI_ASSERT( err == paNoError );
 }
 
-void PortAudioRepoExamplesApp::testContext()
+void PortAudioTestApp::testContext()
 {
 	// make context / dev manager and set as master
 	// TODO: document that the Context owns these
@@ -132,7 +132,7 @@ void PortAudioRepoExamplesApp::testContext()
 
 }
 
-void PortAudioRepoExamplesApp::mouseDown( MouseEvent event )
+void PortAudioTestApp::mouseDown( MouseEvent event )
 {
 #if 0
 	if( ! mStream )
@@ -147,13 +147,13 @@ void PortAudioRepoExamplesApp::mouseDown( MouseEvent event )
 #endif
 }
 
-void PortAudioRepoExamplesApp::update()
+void PortAudioTestApp::update()
 {
 }
 
-void PortAudioRepoExamplesApp::draw()
+void PortAudioTestApp::draw()
 {
 	gl::clear( Color( 0, 0.3f, 0 ) ); 
 }
 
-CINDER_APP( PortAudioRepoExamplesApp, RendererGl )
+CINDER_APP( PortAudioTestApp, RendererGl )

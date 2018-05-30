@@ -54,10 +54,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\PortAudioRepoExamplesApp.cpp">
+    <ClCompile Include="..\src\PortAudioTestApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\PortAudioRepoExamplesApp.cpp">
+    <ClCompile Include="..\src\PortAudioTestApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\lib\ASIOSDK\common\asio.cpp">

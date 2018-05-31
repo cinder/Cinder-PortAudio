@@ -38,7 +38,8 @@ namespace cinder { namespace audio {
 OutputDeviceNodePortAudio::OutputDeviceNodePortAudio( const DeviceRef &device, const Format &format )
 	: OutputDeviceNode( device, format )
 {
-	CI_LOG_I( "bang" );
+	CI_LOG_I( "device key: " << device->getKey() );
+	CI_LOG_I( "channels: " << device->getNumOutputChannels() << ", samplerate: " << device->getSampleRate() << ", framesPerBlock: " << device->getFramesPerBlock() );
 }
 
 OutputDeviceNodePortAudio::~OutputDeviceNodePortAudio()

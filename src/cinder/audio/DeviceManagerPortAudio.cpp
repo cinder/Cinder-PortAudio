@@ -146,10 +146,11 @@ void DeviceManagePortAudio::rebuildDevices()
 		devInfo.mSampleRate = devInfoPa->defaultSampleRate;
 
 		// TODO: need to decide if this should be high, low, input or output
-		devInfo.mFramesPerBlock = devInfo.mNumOutputChannels > 0 ? devInfoPa->defaultHighOutputLatency : devInfoPa->defaultHighInputLatency;
+		// - maybe should have DeviceManagerPortAudio-specific method for getting the range based on the DeviceRef
+		PaTime latencySeconds = devInfo.mNumOutputChannels > 0 ? devInfoPa->defaultHighOutputLatency : devInfoPa->defaultHighInputLatency;
+		//PaTime latencySeconds = devInfo.mNumOutputChannels > 0 ? devInfoPa->defaultLowOutputLatency : devInfoPa->defaultLowInputLatency;
+		devInfo.mFramesPerBlock = size_t( lround( latencySeconds * devInfoPa->defaultSampleRate ) );
 
-
-		// TODO: how does DeviceRef get its properties set? check wasapi
 		DeviceRef addedDevice = addDevice( devInfo.mKey );
 		mDeviceInfoSet.insert( make_pair( addedDevice, devInfo ) );
 	}

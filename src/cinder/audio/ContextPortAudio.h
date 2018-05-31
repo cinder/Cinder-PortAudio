@@ -42,6 +42,9 @@ class OutputDeviceNodePortAudio : public OutputDeviceNode {
 	bool supportsProcessInPlace() const	override	{ return false; }
 
   private:
+
+	  struct Impl;
+	  std::unique_ptr<Impl>		mImpl;
 };
 
 class ContextPortAudio : public Context {

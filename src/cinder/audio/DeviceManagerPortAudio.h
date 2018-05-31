@@ -50,6 +50,8 @@ class DeviceManagePortAudio : public DeviceManager {
 	void setSampleRate( const DeviceRef &device, size_t sampleRate ) override;
 	void setFramesPerBlock( const DeviceRef &device, size_t framesPerBlock ) override;
 
+	// PortAudio specific methods
+	int getPaDeviceIndex( const DeviceRef &device ) const;
 
   private:
 
@@ -65,7 +67,7 @@ class DeviceManagePortAudio : public DeviceManager {
 	};
 
 	DeviceRef findDeviceByPaIndex( int index );
-	DeviceInfo& getDeviceInfo( const DeviceRef &device );
+	const DeviceInfo& getDeviceInfo( const DeviceRef &device ) const;
 	void rebuildDevices();
 
 	std::map<DeviceRef, DeviceInfo> mDeviceInfoSet;

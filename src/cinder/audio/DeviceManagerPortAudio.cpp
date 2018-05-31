@@ -31,7 +31,7 @@ using namespace std;
 namespace cinder { namespace audio {
 
 // ----------------------------------------------------------------------------------------------------
-// DeviceManagePortAudio
+// DeviceManagePortAudio - virtual
 // ----------------------------------------------------------------------------------------------------
 
 DeviceManagePortAudio::DeviceManagePortAudio()
@@ -104,6 +104,16 @@ void DeviceManagePortAudio::setFramesPerBlock( const DeviceRef &device, size_t f
 }
 
 // ----------------------------------------------------------------------------------------------------
+// DeviceManagePortAudio - specific
+// ----------------------------------------------------------------------------------------------------
+
+int DeviceManagePortAudio::getPaDeviceIndex( const DeviceRef &device ) const
+{
+	const auto &devInfo = getDeviceInfo( device );
+	return devInfo.mPaDeviceIndex;
+}
+
+// ----------------------------------------------------------------------------------------------------
 // DeviceManagePortAudio Private
 // ----------------------------------------------------------------------------------------------------
 
@@ -121,7 +131,7 @@ DeviceRef DeviceManagePortAudio::findDeviceByPaIndex( int index )
 	return {};
 }
 
-DeviceManagePortAudio::DeviceInfo& DeviceManagePortAudio::getDeviceInfo( const DeviceRef &device )
+const DeviceManagePortAudio::DeviceInfo& DeviceManagePortAudio::getDeviceInfo( const DeviceRef &device ) const
 {
 	return mDeviceInfoSet.at( device );
 }

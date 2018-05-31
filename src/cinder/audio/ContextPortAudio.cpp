@@ -22,7 +22,9 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "cinder/audio/ContextPortAudio.h"
+#include "cinder/audio/DeviceManagerPortAudio.h"
 #include "cinder/Log.h"
+#include "cinder/Rand.h" // TODO: remove
 
 #include "portaudio.h"
 
@@ -32,11 +34,24 @@ using namespace ci;
 namespace cinder { namespace audio {
 
 // ----------------------------------------------------------------------------------------------------
+// OutputDeviceNodePortAudio::Impl
+// ----------------------------------------------------------------------------------------------------
+
+struct OutputDeviceNodePortAudio::Impl {
+	Impl( OutputDeviceNodePortAudio *parent )
+		: mParent( parent )
+	{}
+
+	PaStream *mStream = nullptr;
+	OutputDeviceNodePortAudio*	mParent;
+};
+
+// ----------------------------------------------------------------------------------------------------
 // OutputDeviceNodePortAudio
 // ----------------------------------------------------------------------------------------------------
 
 OutputDeviceNodePortAudio::OutputDeviceNodePortAudio( const DeviceRef &device, const Format &format )
-	: OutputDeviceNode( device, format )
+	: OutputDeviceNode( device, format ), mImpl( new Impl( this ) )
 {
 	CI_LOG_I( "device key: " << device->getKey() );
 	CI_LOG_I( "channels: " << device->getNumOutputChannels() << ", samplerate: " << device->getSampleRate() << ", framesPerBlock: " << device->getFramesPerBlock() );
@@ -47,24 +62,70 @@ OutputDeviceNodePortAudio::~OutputDeviceNodePortAudio()
 	CI_LOG_I( "bang" );
 }
 
+static int noiseCallback( const void *inputBuffer, void *outputBuffer, unsigned long framesPerBuffer, const PaStreamCallbackTimeInfo* timeInfo, PaStreamCallbackFlags statusFlags, void *userData )
+{
+	float *out = (float*)outputBuffer;
+	const float *in = (const float *)inputBuffer;
+
+	(void) timeInfo; /* Prevent unused variable warnings. */
+	(void) statusFlags;
+	(void) userData;
+
+	const float vol = 0.1f;
+	for( int i = 0; i < framesPerBuffer; i++ ) {
+		*out++ = ci::randFloat( -vol, vol ); // left
+		*out++ = ci::randFloat( -vol, vol ); // right
+	}
+
+	return paContinue;
+}
+
 void OutputDeviceNodePortAudio::initialize()
 {
 	CI_LOG_I( "bang" );
+
+	auto manager = dynamic_cast<DeviceManagePortAudio *>( Context::deviceManager() );
+
+	PaDeviceIndex devIndex = (PaDeviceIndex) manager->getPaDeviceIndex( getDevice() );
+	const PaDeviceInfo *devInfo = Pa_GetDeviceInfo( devIndex );
+
+	// Open an audio I/O stream.
+	PaStreamParameters outputParams;
+	outputParams.device = devIndex;
+	outputParams.channelCount = getNumChannels();
+	outputParams.sampleFormat = paFloat32;
+	outputParams.suggestedLatency = devInfo->defaultHighOutputLatency; // TODO: device how to 
+	outputParams.hostApiSpecificStreamInfo = NULL;
+
+	PaStreamFlags flags = 0;
+	PaError err = Pa_OpenStream( &mImpl->mStream, nullptr, &outputParams, getOutputSampleRate(), getFramesPerBlock(), flags, noiseCallback, this );
+	CI_ASSERT( err == paNoError );
 }
 
 void OutputDeviceNodePortAudio::uninitialize()
 {
 	CI_LOG_I( "bang" );
+
+	PaError err = Pa_CloseStream( mImpl->mStream );
+	CI_ASSERT( err == paNoError );
+
+	mImpl->mStream = nullptr;
 }
 
 void OutputDeviceNodePortAudio::enableProcessing()
 {
 	CI_LOG_I( "bang" );
+
+	PaError err = Pa_StartStream( mImpl->mStream );
+	CI_ASSERT( err == paNoError );
 }
 
 void OutputDeviceNodePortAudio::disableProcessing()
 {
 	CI_LOG_I( "bang" );
+
+	PaError err = Pa_StopStream( mImpl->mStream );
+	CI_ASSERT( err == paNoError );
 }
 
 // ----------------------------------------------------------------------------------------------------

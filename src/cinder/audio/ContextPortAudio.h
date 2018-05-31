@@ -42,6 +42,7 @@ class OutputDeviceNodePortAudio : public OutputDeviceNode {
 	bool supportsProcessInPlace() const	override	{ return false; }
 
   private:
+	  void renderAudio( float *outputBuffer, size_t framesPerBuffer );
 
 	  struct Impl;
 	  std::unique_ptr<Impl>		mImpl;

@@ -25,7 +25,8 @@ class PortAudioTestApp : public App {
 	void keyDown( KeyEvent event ) override;
 	void mouseDown( MouseEvent event ) override;
 
-	void printInfo();
+	void printPaInfo();
+	void printContextInfo();
 	void testOpenStream();
 	void testContext();
 
@@ -34,14 +35,14 @@ class PortAudioTestApp : public App {
 
 void PortAudioTestApp::setup()
 {
-	printInfo();
+	printPaInfo();
 	//paex_saw_main();	
 	//testOpenStream();
 
 	testContext();
 }
 
-void PortAudioTestApp::printInfo()
+void PortAudioTestApp::printPaInfo()
 {
 	PaError err = Pa_Initialize();
 	CI_ASSERT( err == paNoError );
@@ -125,13 +126,28 @@ void PortAudioTestApp::testContext()
 	// TODO: document that the Context owns these
 	audio::Context::setMaster( new audio::ContextPortAudio, new audio::DeviceManagePortAudio );
 
-	auto genNode = audio::master()->makeNode<audio::GenSineNode>();
+	auto genNode = audio::master()->makeNode<audio::GenSineNode>( 440 );
 	auto gainNode = audio::master()->makeNode<audio::GainNode>( 0.5f );
 
 	genNode >> gainNode >> audio::master()->getOutput();
 
+	genNode->enable();
 	audio::master()->enable();
+}
 
+void PortAudioTestApp::printContextInfo()
+{
+	stringstream str;
+	auto ctx = ci::audio::master();
+
+	str << "\n-------------- Context info --------------\n";
+	str << "enabled: " << boolalpha << ctx->isEnabled() << ", samplerate: " << ctx->getSampleRate() << ", frames per block: " << ctx->getFramesPerBlock() << endl;
+
+	str << "-------------- Graph configuration: --------------" << endl;
+	str << ci::audio::master()->printGraphToString();
+	str << "--------------------------------------------------" << endl;
+
+	CI_LOG_I( str.str() );
 }
 
 void PortAudioTestApp::mouseDown( MouseEvent event )
@@ -153,6 +169,9 @@ void PortAudioTestApp::keyDown( KeyEvent event )
 {
 	if( event.getChar() == 'd' ) {
 		CI_LOG_I( "devices:\n" << audio::Device::printDevicesToString() );
+	}
+	else if( event.getChar() == 'p' ) {
+		printContextInfo();
 	}
 }
 

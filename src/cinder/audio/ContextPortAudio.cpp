@@ -23,6 +23,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include "cinder/audio/ContextPortAudio.h"
 #include "cinder/audio/DeviceManagerPortAudio.h"
+#include "cinder/audio/dsp/Converter.h"
 #include "cinder/Log.h"
 #include "cinder/Rand.h" // TODO: remove
 
@@ -42,9 +43,28 @@ struct OutputDeviceNodePortAudio::Impl {
 		: mParent( parent )
 	{}
 
+	static int streamCallback( const void *inputBuffer, void *outputBuffer, unsigned long framesPerBuffer, const PaStreamCallbackTimeInfo* timeInfo, PaStreamCallbackFlags statusFlags, void *userData )
+	{
+		auto parent = (OutputDeviceNodePortAudio *)userData;
+
+		float *out = (float*)outputBuffer;
+		//const float *in = (const float *)inputBuffer; // TODO: for duplex input this will need to be sent to renderAudio() also
+		
+		parent->renderAudio( out, (size_t)framesPerBuffer );
+
+		//const float vol = 0.1f;
+		//for( int i = 0; i < framesPerBuffer; i++ ) {
+		//	*out++ = ci::randFloat( -vol, vol ); // left
+		//	*out++ = ci::randFloat( -vol, vol ); // right
+		//}
+
+		return paContinue;
+	}
+
 	PaStream *mStream = nullptr;
 	OutputDeviceNodePortAudio*	mParent;
 };
+
 
 // ----------------------------------------------------------------------------------------------------
 // OutputDeviceNodePortAudio
@@ -54,14 +74,14 @@ OutputDeviceNodePortAudio::OutputDeviceNodePortAudio( const DeviceRef &device, c
 	: OutputDeviceNode( device, format ), mImpl( new Impl( this ) )
 {
 	CI_LOG_I( "device key: " << device->getKey() );
-	CI_LOG_I( "channels: " << device->getNumOutputChannels() << ", samplerate: " << device->getSampleRate() << ", framesPerBlock: " << device->getFramesPerBlock() );
+	CI_LOG_I( "device channels: " << device->getNumOutputChannels() << ", samplerate: " << device->getSampleRate() << ", framesPerBlock: " << device->getFramesPerBlock() );
 }
 
 OutputDeviceNodePortAudio::~OutputDeviceNodePortAudio()
 {
-	CI_LOG_I( "bang" );
 }
 
+#if 0
 static int noiseCallback( const void *inputBuffer, void *outputBuffer, unsigned long framesPerBuffer, const PaStreamCallbackTimeInfo* timeInfo, PaStreamCallbackFlags statusFlags, void *userData )
 {
 	float *out = (float*)outputBuffer;
@@ -80,10 +100,10 @@ static int noiseCallback( const void *inputBuffer, void *outputBuffer, unsigned 
 	return paContinue;
 }
 
+#endif
+
 void OutputDeviceNodePortAudio::initialize()
 {
-	CI_LOG_I( "bang" );
-
 	auto manager = dynamic_cast<DeviceManagePortAudio *>( Context::deviceManager() );
 
 	PaDeviceIndex devIndex = (PaDeviceIndex) manager->getPaDeviceIndex( getDevice() );
@@ -93,19 +113,18 @@ void OutputDeviceNodePortAudio::initialize()
 	PaStreamParameters outputParams;
 	outputParams.device = devIndex;
 	outputParams.channelCount = getNumChannels();
+	//outputParams.sampleFormat = paFloat32 | paNonInterleaved; // TODO: get non-interleaved working 
 	outputParams.sampleFormat = paFloat32;
 	outputParams.suggestedLatency = devInfo->defaultHighOutputLatency; // TODO: device how to 
 	outputParams.hostApiSpecificStreamInfo = NULL;
 
 	PaStreamFlags flags = 0;
-	PaError err = Pa_OpenStream( &mImpl->mStream, nullptr, &outputParams, getOutputSampleRate(), getFramesPerBlock(), flags, noiseCallback, this );
+	PaError err = Pa_OpenStream( &mImpl->mStream, nullptr, &outputParams, getOutputSampleRate(), getFramesPerBlock(), flags, &Impl::streamCallback, this );
 	CI_ASSERT( err == paNoError );
 }
 
 void OutputDeviceNodePortAudio::uninitialize()
 {
-	CI_LOG_I( "bang" );
-
 	PaError err = Pa_CloseStream( mImpl->mStream );
 	CI_ASSERT( err == paNoError );
 
@@ -114,18 +133,44 @@ void OutputDeviceNodePortAudio::uninitialize()
 
 void OutputDeviceNodePortAudio::enableProcessing()
 {
-	CI_LOG_I( "bang" );
-
 	PaError err = Pa_StartStream( mImpl->mStream );
 	CI_ASSERT( err == paNoError );
 }
 
 void OutputDeviceNodePortAudio::disableProcessing()
 {
-	CI_LOG_I( "bang" );
-
 	PaError err = Pa_StopStream( mImpl->mStream );
 	CI_ASSERT( err == paNoError );
+}
+
+void OutputDeviceNodePortAudio::renderAudio( float *outputBuffer, size_t framesPerBuffer )
+{
+	auto ctx = getContext();
+	if( ! ctx )
+		return;
+
+	lock_guard<mutex> lock( ctx->getMutex() );
+
+	// verify context still exists, since its destructor may have been holding the lock
+	ctx = getContext();
+	if( ! ctx )
+		return;
+
+	ctx->preProcess();
+
+	auto internalBuffer = getInternalBuffer();
+	internalBuffer->zero();
+	pullInputs( internalBuffer );
+
+	if( checkNotClipping() )
+		internalBuffer->zero();
+
+	const size_t numFrames = internalBuffer->getNumFrames();
+	const size_t numChannels = internalBuffer->getNumChannels();
+
+	dsp::interleave( internalBuffer->getData(), outputBuffer, numFrames, numChannels, numFrames );
+
+	ctx->postProcess();
 }
 
 // ----------------------------------------------------------------------------------------------------

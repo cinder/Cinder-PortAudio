@@ -58,6 +58,8 @@ class ContextPortAudio : public Context {
 	InputDeviceNodeRef	createInputDeviceNode( const DeviceRef &device, const Node::Format &format = Node::Format() )	override;
 
   private:
+
+	std::vector<std::weak_ptr<Node>>	mDeviceNodes;
 };
 
 } } // namespace cinder::audio

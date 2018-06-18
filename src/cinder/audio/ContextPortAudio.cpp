@@ -164,13 +164,24 @@ ContextPortAudio::ContextPortAudio()
 
 ContextPortAudio::~ContextPortAudio()
 {
+	// uninit any device nodes before the portaudio context is destroyed
+	for( auto& deviceNode : mDeviceNodes ) {
+		auto node = deviceNode.lock();
+		if( node ) {
+			node->disable();
+			uninitializeNode( node );
+		}
+	}
+
 	PaError err = Pa_Terminate();
 	CI_ASSERT( err == paNoError );
 }
 
 OutputDeviceNodeRef	ContextPortAudio::createOutputDeviceNode( const DeviceRef &device, const Node::Format &format )
 {
-	return makeNode( new OutputDeviceNodePortAudio( device, format ) );
+	auto result = makeNode( new OutputDeviceNodePortAudio( device, format ) );
+	mDeviceNodes.push_back( result );
+	return result;
 }
 
 InputDeviceNodeRef ContextPortAudio::createInputDeviceNode( const DeviceRef &device, const Node::Format &format )

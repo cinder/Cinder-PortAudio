@@ -52,12 +52,6 @@ struct OutputDeviceNodePortAudio::Impl {
 		
 		parent->renderAudio( out, (size_t)framesPerBuffer );
 
-		//const float vol = 0.1f;
-		//for( int i = 0; i < framesPerBuffer; i++ ) {
-		//	*out++ = ci::randFloat( -vol, vol ); // left
-		//	*out++ = ci::randFloat( -vol, vol ); // right
-		//}
-
 		return paContinue;
 	}
 
@@ -81,27 +75,6 @@ OutputDeviceNodePortAudio::~OutputDeviceNodePortAudio()
 {
 }
 
-#if 0
-static int noiseCallback( const void *inputBuffer, void *outputBuffer, unsigned long framesPerBuffer, const PaStreamCallbackTimeInfo* timeInfo, PaStreamCallbackFlags statusFlags, void *userData )
-{
-	float *out = (float*)outputBuffer;
-	const float *in = (const float *)inputBuffer;
-
-	(void) timeInfo; /* Prevent unused variable warnings. */
-	(void) statusFlags;
-	(void) userData;
-
-	const float vol = 0.1f;
-	for( int i = 0; i < framesPerBuffer; i++ ) {
-		*out++ = ci::randFloat( -vol, vol ); // left
-		*out++ = ci::randFloat( -vol, vol ); // right
-	}
-
-	return paContinue;
-}
-
-#endif
-
 void OutputDeviceNodePortAudio::initialize()
 {
 	auto manager = dynamic_cast<DeviceManagePortAudio *>( Context::deviceManager() );
@@ -115,7 +88,7 @@ void OutputDeviceNodePortAudio::initialize()
 	outputParams.channelCount = getNumChannels();
 	//outputParams.sampleFormat = paFloat32 | paNonInterleaved; // TODO: get non-interleaved working 
 	outputParams.sampleFormat = paFloat32;
-	outputParams.suggestedLatency = devInfo->defaultHighOutputLatency; // TODO: device how to 
+	outputParams.suggestedLatency = devInfo->defaultHighOutputLatency; // TODO: device how to pick latency settings?
 	outputParams.hostApiSpecificStreamInfo = NULL;
 
 	PaStreamFlags flags = 0;

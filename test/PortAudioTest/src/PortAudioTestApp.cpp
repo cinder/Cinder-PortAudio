@@ -28,7 +28,7 @@ class PortAudioTestApp : public App {
 	void printPaInfo();
 	void printContextInfo();
 	void testOpenStream();
-	void testContext();
+	void testSimple();
 
 	PaStream *mStream = nullptr;
 };
@@ -39,7 +39,10 @@ void PortAudioTestApp::setup()
 	//paex_saw_main();	
 	//testOpenStream();
 
-	testContext();
+	// make ContextPortAudio the master context, overriding cinder's default
+	audio::ContextPortAudio::setAsMaster();
+
+	testSimple();
 }
 
 void PortAudioTestApp::printPaInfo()
@@ -120,13 +123,11 @@ void PortAudioTestApp::testOpenStream()
 	CI_ASSERT( err == paNoError );
 }
 
-void PortAudioTestApp::testContext()
+void PortAudioTestApp::testSimple()
 {
-	// make ContextPortAudio the master context, overriding cinder's default
-	audio::ContextPortAudio::setAsMaster();
-
+	// sinewave -> gain (stereo) -> out
 	auto genNode = audio::master()->makeNode<audio::GenSineNode>( 440 );
-	auto gainNode = audio::master()->makeNode<audio::GainNode>( 0.5f );
+	auto gainNode = audio::master()->makeNode<audio::GainNode>( 0.5f, audio::Node::Format().channels( 2 ) );
 
 	genNode >> gainNode >> audio::master()->getOutput();
 

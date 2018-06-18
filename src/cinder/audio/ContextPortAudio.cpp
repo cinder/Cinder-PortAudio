@@ -177,6 +177,12 @@ void OutputDeviceNodePortAudio::renderAudio( float *outputBuffer, size_t framesP
 // ContextPortAudio
 // ----------------------------------------------------------------------------------------------------
 
+// static
+void ContextPortAudio::setAsMaster()
+{
+	Context::setMaster( new ContextPortAudio, new DeviceManagePortAudio );
+}
+
 ContextPortAudio::ContextPortAudio()
 {
 	PaError err = Pa_Initialize();

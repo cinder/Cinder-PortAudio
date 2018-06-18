@@ -122,9 +122,8 @@ void PortAudioTestApp::testOpenStream()
 
 void PortAudioTestApp::testContext()
 {
-	// make context / dev manager and set as master
-	// TODO: document that the Context owns these
-	audio::Context::setMaster( new audio::ContextPortAudio, new audio::DeviceManagePortAudio );
+	// make ContextPortAudio the master context, overriding cinder's default
+	audio::ContextPortAudio::setAsMaster();
 
 	auto genNode = audio::master()->makeNode<audio::GenSineNode>( 440 );
 	auto gainNode = audio::master()->makeNode<audio::GainNode>( 0.5f );

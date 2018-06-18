@@ -50,6 +50,8 @@ class OutputDeviceNodePortAudio : public OutputDeviceNode {
 
 class ContextPortAudio : public Context {
   public:
+	static void setAsMaster();
+
 	ContextPortAudio();
 	~ContextPortAudio();
 	OutputDeviceNodeRef	createOutputDeviceNode( const DeviceRef &device, const Node::Format &format = Node::Format() )	override;

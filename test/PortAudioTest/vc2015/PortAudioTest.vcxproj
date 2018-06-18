@@ -213,6 +213,7 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\..\samples\_audio\common\AudioDrawUtils.cpp" />
     <ClCompile Include="..\..\..\lib\ASIOSDK\common\asio.cpp" />
     <ClCompile Include="..\..\..\lib\ASIOSDK\host\asiodrivers.cpp" />
     <ClCompile Include="..\..\..\lib\ASIOSDK\host\pc\asiolist.cpp" />

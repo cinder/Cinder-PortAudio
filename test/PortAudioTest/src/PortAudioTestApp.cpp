@@ -8,6 +8,8 @@
 #include "cinder/audio/ContextPortAudio.h"
 #include "cinder/audio/DeviceManagerPortAudio.h"
 
+#include "../../../../../samples/_audio/common/AudioDrawUtils.h"
+
 #include "portaudio.h"
 
 extern int paex_saw_main();
@@ -29,8 +31,17 @@ class PortAudioTestApp : public App {
 	void printContextInfo();
 	void testOpenStream();
 	void testSimple();
+	void testMultichannel();
+	void rampGain();
+	void shiftRouteChannel();
 
 	PaStream *mStream = nullptr;
+
+	audio::GenNodeRef				mGen;
+	audio::GainNodeRef				mGain;
+	audio::MonitorNodeRef			mMonitor;
+	audio::ChannelRouterNodeRef		mChannelRouterNode;
+	size_t mCurrentChannel = 0;
 };
 
 void PortAudioTestApp::setup()
@@ -42,7 +53,8 @@ void PortAudioTestApp::setup()
 	// make ContextPortAudio the master context, overriding cinder's default
 	audio::ContextPortAudio::setAsMaster();
 
-	testSimple();
+	//testSimple();
+	testMultichannel();
 }
 
 void PortAudioTestApp::printPaInfo()
@@ -135,6 +147,26 @@ void PortAudioTestApp::testSimple()
 	audio::master()->enable();
 }
 
+void PortAudioTestApp::testMultichannel()
+{
+	auto ctx = audio::Context::master();
+	
+	auto dev = audio::Device::getDefaultOutput();
+	auto outputNode = ctx->createOutputDeviceNode( dev, audio::Node::Format().channels( dev->getNumOutputChannels() ) );
+	ctx->setOutput( outputNode );
+
+	mGen = ctx->makeNode( new audio::GenSineNode( 440, audio::Node::Format().autoEnable() ) );
+	mGain = ctx->makeNode( new audio::GainNode( 0 ) );
+
+	mChannelRouterNode = ctx->makeNode( new audio::ChannelRouterNode( audio::Node::Format().channels( ctx->getOutput()->getNumChannels() ) ) );
+
+	mMonitor = ctx->makeNode( new audio::MonitorNode );
+
+	mGen >> mGain >> mChannelRouterNode->route( 0, mCurrentChannel ) >> mMonitor >> ctx->getOutput();
+
+	ctx->enable();
+}
+
 void PortAudioTestApp::printContextInfo()
 {
 	stringstream str;
@@ -148,6 +180,22 @@ void PortAudioTestApp::printContextInfo()
 	str << "--------------------------------------------------" << endl;
 
 	CI_LOG_I( str.str() );
+}
+
+void PortAudioTestApp::rampGain()
+{
+	mGain->getParam()->applyRamp( 0, 0.4, 0.5f );
+	mGain->getParam()->appendRamp( 0, 0.5f );
+}
+
+void PortAudioTestApp::shiftRouteChannel()
+{
+	mCurrentChannel = ( mCurrentChannel + 1 ) % mChannelRouterNode->getNumChannels();
+
+	mChannelRouterNode->disconnectAllInputs();
+	mGain->disconnectAllOutputs();
+
+	mGain >> mChannelRouterNode->route( 0, mCurrentChannel );
 }
 
 void PortAudioTestApp::mouseDown( MouseEvent event )
@@ -177,11 +225,21 @@ void PortAudioTestApp::keyDown( KeyEvent event )
 
 void PortAudioTestApp::update()
 {
+	if( mGain->getParam()->getNumEvents() == 0 ) {
+		shiftRouteChannel();
+		rampGain();
+	}
 }
 
 void PortAudioTestApp::draw()
 {
-	gl::clear( Color( 0, 0.3f, 0 ) ); 
+	gl::clear( Color( 0, 0.1f, 0.1f ) );
+
+	// Draw the Scope's recorded Buffer, all channels as separate line arrays.
+	if( mMonitor && mMonitor->isEnabled() ) {
+		Rectf scopeRect( 10, 10, (float)getWindowWidth() - 10, (float)getWindowHeight() - 10 );
+		drawAudioBuffer( mMonitor->getBuffer(), scopeRect, true );
+	}
 }
 
 CINDER_APP( PortAudioTestApp, RendererGl )

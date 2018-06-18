@@ -132,6 +132,9 @@
     <ClCompile Include="..\..\..\src\cinder\audio\DeviceManagerPortAudio.cpp">
       <Filter>Blocks\Cinder-PortAudio\src\cinder\audio</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\..\samples\_audio\common\AudioDrawUtils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\lib\portaudio\include\pa_asio.h">

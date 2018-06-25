@@ -152,6 +152,16 @@ void PortAudioTestApp::testMultichannel()
 	auto ctx = audio::Context::master();
 	
 	auto dev = audio::Device::getDefaultOutput();
+	//auto dev = audio::Device::findDeviceByName( "Focusrite USB ASIO" );
+	//auto dev = audio::Device::findDeviceByName( "Realtek ASIO" ); // note: currently fails in asio code (ASIOCreateBuffers() returns -997, ASE_InvalidMode)
+	//auto dev = audio::Device::findDeviceByName( "Focusrite USB (Focusrite USB Audio)" );
+	//auto dev = audio::Device::findDeviceByName( "Speakers (Realtek High Definition Audio)" );
+
+	if( ! dev ) {
+		CI_LOG_E( "no device selected." );
+		return;
+	}
+
 	auto outputNode = ctx->createOutputDeviceNode( dev, audio::Node::Format().channels( dev->getNumOutputChannels() ) );
 	ctx->setOutput( outputNode );
 

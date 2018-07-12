@@ -93,14 +93,13 @@ size_t DeviceManagePortAudio::getFramesPerBlock( const DeviceRef &device )
 
 void DeviceManagePortAudio::setSampleRate( const DeviceRef &device, size_t sampleRate )
 {
-	// TODO
-	CI_ASSERT_NOT_REACHABLE();
+	// TODO: use Pa_IsFormatSupported to check if valid first
+	getDeviceInfo( device ).mSampleRate = sampleRate;
 }
 
 void DeviceManagePortAudio::setFramesPerBlock( const DeviceRef &device, size_t framesPerBlock )
 {
-	// TODO
-	CI_ASSERT_NOT_REACHABLE();
+	getDeviceInfo( device ).mFramesPerBlock = framesPerBlock;
 }
 
 // ----------------------------------------------------------------------------------------------------
@@ -129,6 +128,11 @@ DeviceRef DeviceManagePortAudio::findDeviceByPaIndex( int index )
 
 	CI_ASSERT_NOT_REACHABLE();
 	return {};
+}
+
+DeviceManagePortAudio::DeviceInfo& DeviceManagePortAudio::getDeviceInfo( const DeviceRef &device )
+{
+	return mDeviceInfoSet.at( device );
 }
 
 const DeviceManagePortAudio::DeviceInfo& DeviceManagePortAudio::getDeviceInfo( const DeviceRef &device ) const

@@ -88,11 +88,14 @@ void OutputDeviceNodePortAudio::initialize()
 	outputParams.channelCount = getNumChannels();
 	//outputParams.sampleFormat = paFloat32 | paNonInterleaved; // TODO: get non-interleaved working 
 	outputParams.sampleFormat = paFloat32;
-	outputParams.suggestedLatency = devInfo->defaultHighOutputLatency; // TODO: device how to pick latency settings?
 	outputParams.hostApiSpecificStreamInfo = NULL;
 
+	size_t framesPerBlock = getOutputFramesPerBlock();
+	double sampleRate = getOutputSampleRate();
+	outputParams.suggestedLatency = getDevice()->getFramesPerBlock() / sampleRate;	
+
 	PaStreamFlags flags = 0;
-	PaError err = Pa_OpenStream( &mImpl->mStream, nullptr, &outputParams, getOutputSampleRate(), getFramesPerBlock(), flags, &Impl::streamCallback, this );
+	PaError err = Pa_OpenStream( &mImpl->mStream, nullptr, &outputParams, sampleRate, framesPerBlock, flags, &Impl::streamCallback, this );
 	CI_ASSERT( err == paNoError );
 }
 

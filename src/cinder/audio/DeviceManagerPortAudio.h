@@ -67,6 +67,7 @@ class DeviceManagePortAudio : public DeviceManager {
 	};
 
 	DeviceRef findDeviceByPaIndex( int index );
+	DeviceInfo& getDeviceInfo( const DeviceRef &device );
 	const DeviceInfo& getDeviceInfo( const DeviceRef &device ) const;
 	void rebuildDevices();
 

@@ -162,6 +162,8 @@ void PortAudioTestApp::testMultichannel()
 		return;
 	}
 
+	//dev->updateFormat( audio::Device::Format().framesPerBlock( 64 ) ); // test low latency frames per block
+
 	auto outputNode = ctx->createOutputDeviceNode( dev, audio::Node::Format().channels( dev->getNumOutputChannels() ) );
 	ctx->setOutput( outputNode );
 

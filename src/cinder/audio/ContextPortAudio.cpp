@@ -59,7 +59,6 @@ struct OutputDeviceNodePortAudio::Impl {
 	OutputDeviceNodePortAudio*	mParent;
 };
 
-
 // ----------------------------------------------------------------------------------------------------
 // OutputDeviceNodePortAudio
 // ----------------------------------------------------------------------------------------------------
@@ -150,6 +149,99 @@ void OutputDeviceNodePortAudio::renderAudio( float *outputBuffer, size_t framesP
 }
 
 // ----------------------------------------------------------------------------------------------------
+// InputDeviceNodePortAudio::Impl
+// ----------------------------------------------------------------------------------------------------
+
+struct InputDeviceNodePortAudio::Impl {
+	Impl( InputDeviceNodePortAudio *parent )
+		: mParent( parent )
+	{}
+
+	//! This callback handles non-duplexed audio input
+	static int streamCallback( const void *inputBuffer, void *outputBuffer, unsigned long framesPerBuffer, const PaStreamCallbackTimeInfo* timeInfo, PaStreamCallbackFlags statusFlags, void *userData )
+	{
+		auto parent = (InputDeviceNodePortAudio *)userData;
+
+		const float *in = (const float *)inputBuffer;
+
+		parent->captureAudio( in, (size_t)framesPerBuffer );
+
+		return paContinue;
+	}
+
+	PaStream *mStream = nullptr;
+	InputDeviceNodePortAudio*	mParent;
+};
+
+// ----------------------------------------------------------------------------------------------------
+// InputDeviceNodePortAudio
+// ----------------------------------------------------------------------------------------------------
+
+InputDeviceNodePortAudio::InputDeviceNodePortAudio( const DeviceRef &device, const Format &format )
+	: InputDeviceNode( device, format ), mImpl( new Impl( this ) )
+{
+	CI_LOG_I( "device key: " << device->getKey() );
+	CI_LOG_I( "device channels: " << device->getNumInputChannels() << ", samplerate: " << device->getSampleRate() << ", framesPerBlock: " << device->getFramesPerBlock() );
+}
+
+InputDeviceNodePortAudio::~InputDeviceNodePortAudio()
+{
+}
+
+void InputDeviceNodePortAudio::initialize()
+{
+	auto manager = dynamic_cast<DeviceManagePortAudio *>( Context::deviceManager() );
+
+	PaDeviceIndex devIndex = (PaDeviceIndex) manager->getPaDeviceIndex( getDevice() );
+	const PaDeviceInfo *devInfo = Pa_GetDeviceInfo( devIndex );
+
+	// Open an audio I/O stream.
+	PaStreamParameters inputParams;
+	inputParams.device = devIndex;
+	inputParams.channelCount = getNumChannels();
+	inputParams.sampleFormat = paFloat32;
+	inputParams.hostApiSpecificStreamInfo = NULL;
+
+	size_t framesPerBlock = getFramesPerBlock();
+	double sampleRate = getSampleRate();
+	inputParams.suggestedLatency = getDevice()->getFramesPerBlock() / sampleRate;	
+
+	PaStreamFlags flags = 0;
+	PaError err = Pa_OpenStream( &mImpl->mStream, &inputParams, nullptr, sampleRate, framesPerBlock, flags, &Impl::streamCallback, this );
+	CI_ASSERT( err == paNoError );
+}
+
+void InputDeviceNodePortAudio::uninitialize()
+{
+	PaError err = Pa_CloseStream( mImpl->mStream );
+	CI_ASSERT( err == paNoError );
+
+	mImpl->mStream = nullptr;
+}
+
+void InputDeviceNodePortAudio::enableProcessing()
+{
+	PaError err = Pa_StartStream( mImpl->mStream );
+	CI_ASSERT( err == paNoError );
+}
+
+void InputDeviceNodePortAudio::disableProcessing()
+{
+	PaError err = Pa_StopStream( mImpl->mStream );
+	CI_ASSERT( err == paNoError );
+}
+
+void InputDeviceNodePortAudio::captureAudio( const float *inputBuffer, size_t framesPerBuffer )
+{
+	// TODO: write to ring buffer
+}
+
+void InputDeviceNodePortAudio::process( Buffer *buffer )
+{
+	// TODO: read from ring buffer
+}
+
+// ----------------------------------------------------------------------------------------------------
 // ContextPortAudio
 // ----------------------------------------------------------------------------------------------------
 
@@ -189,9 +281,9 @@ OutputDeviceNodeRef	ContextPortAudio::createOutputDeviceNode( const DeviceRef &d
 
 InputDeviceNodeRef ContextPortAudio::createInputDeviceNode( const DeviceRef &device, const Node::Format &format )
 {
-	CI_LOG_E( "not yet implemented" );
-	CI_ASSERT_NOT_REACHABLE();
-	return {};
+	auto result = makeNode( new InputDeviceNodePortAudio( device, format ) );
+	mDeviceNodes.push_back( result );
+	return result;
 }
 
 } } // namespace cinder::audio

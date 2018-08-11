@@ -26,6 +26,7 @@
 #include "cinder/Cinder.h"
 
 #include "cinder/audio/Context.h"
+#include "cinder/audio/dsp/RingBuffer.h"
 
 namespace cinder { namespace audio {
 
@@ -46,6 +47,31 @@ class OutputDeviceNodePortAudio : public OutputDeviceNode {
 
 	  struct Impl;
 	  std::unique_ptr<Impl>		mImpl;
+};
+
+class InputDeviceNodePortAudio : public InputDeviceNode {
+public:
+	InputDeviceNodePortAudio( const DeviceRef &device, const Format &format );
+	virtual ~InputDeviceNodePortAudio();
+
+	void enableProcessing()		override;
+	void disableProcessing()	override;
+
+protected:
+	void initialize()				override;
+	void uninitialize()				override;
+	void process( Buffer *buffer )	override;
+
+private:
+	void captureAudio( const float *inputBuffer, size_t framesPerBuffer );
+
+	dsp::RingBuffer						mRingBuffer;
+	//std::unique_ptr<dsp::Converter>		mConverter;
+	BufferDynamic						mReadBuffer/*, mConvertedReadBuffer*/;
+	bool								mSynchronousIO;
+
+	struct Impl;
+	std::unique_ptr<Impl>		mImpl;
 };
 
 class ContextPortAudio : public Context {

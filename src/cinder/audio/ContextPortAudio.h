@@ -26,7 +26,6 @@
 #include "cinder/Cinder.h"
 
 #include "cinder/audio/Context.h"
-#include "cinder/audio/dsp/RingBuffer.h"
 
 namespace cinder { namespace audio {
 
@@ -63,11 +62,10 @@ protected:
 	void process( Buffer *buffer )	override;
 
 private:
-	void captureAudio( const float *inputBuffer, size_t framesPerBuffer );
+	//void captureAudio( const float *inputBuffer, size_t framesPerBuffer );
 
-	dsp::RingBuffer						mRingBuffer;
+	//dsp::RingBuffer						mRingBuffer;
 	//std::unique_ptr<dsp::Converter>		mConverter;
-	BufferDynamic						mReadBuffer/*, mConvertedReadBuffer*/;
 	bool								mSynchronousIO;
 
 	struct Impl;

@@ -154,11 +154,11 @@ void PortAudioTestApp::testMultichannel()
 {
 	auto ctx = audio::Context::master();
 	
-	auto dev = audio::Device::getDefaultOutput();
+	//auto dev = audio::Device::getDefaultOutput();
 	//auto dev = audio::Device::findDeviceByName( "Focusrite USB ASIO" );
 	//auto dev = audio::Device::findDeviceByName( "Realtek ASIO" ); // note: currently fails in asio code (ASIOCreateBuffers() returns -997, ASE_InvalidMode)
 	//auto dev = audio::Device::findDeviceByName( "Focusrite USB (Focusrite USB Audio)" );
-	//auto dev = audio::Device::findDeviceByName( "Speakers (Realtek High Definition Audio)" );
+	auto dev = audio::Device::findDeviceByName( "Speakers (Realtek High Definition Audio)" );
 
 	if( ! dev ) {
 		CI_LOG_E( "no device selected." );
@@ -188,11 +188,16 @@ void PortAudioTestApp::testInputOutput()
 
 	auto ctx = audio::Context::master();
 
-	auto outputDev = audio::Device::getDefaultOutput();
+	//auto outputDev = audio::Device::getDefaultOutput();
+	auto outputDev = audio::Device::findDeviceByName( "Speakers (Realtek High Definition Audio)" );
+
 	auto outputNode = ctx->createOutputDeviceNode( outputDev );
 	ctx->setOutput( outputNode );
 
-	auto inputNode = ctx->createInputDeviceNode();
+	//auto inputDev = audio::Device::getDefaultInput();
+	auto inputDev = audio::Device::findDeviceByName( "Microphone (HD Webcam C615)" );
+
+	auto inputNode = ctx->createInputDeviceNode( inputDev );
 	mGain = ctx->makeNode( new audio::GainNode( mVolume ) );
 
 	mMonitor = ctx->makeNode( new audio::MonitorNode );

@@ -24,8 +24,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "cinder/audio/ContextPortAudio.h"
 #include "cinder/audio/DeviceManagerPortAudio.h"
 #include "cinder/audio/dsp/Converter.h"
+#include "cinder/audio/dsp/RingBuffer.h"
 #include "cinder/Log.h"
-#include "cinder/Rand.h" // TODO: remove
 
 #include "portaudio.h"
 
@@ -85,7 +85,7 @@ void OutputDeviceNodePortAudio::initialize()
 	PaStreamParameters outputParams;
 	outputParams.device = devIndex;
 	outputParams.channelCount = getNumChannels();
-	//outputParams.sampleFormat = paFloat32 | paNonInterleaved; // TODO: get non-interleaved working 
+	//outputParams.sampleFormat = paFloat32 | paNonInterleaved; // TODO: try non-interleaved
 	outputParams.sampleFormat = paFloat32;
 	outputParams.hostApiSpecificStreamInfo = NULL;
 
@@ -157,6 +157,18 @@ struct InputDeviceNodePortAudio::Impl {
 		: mParent( parent )
 	{}
 
+	// TODO: if using duplex i/o we shouldn't need ringbuffers
+	void init( size_t numChannels, size_t framesPerBlock )
+	{
+		const size_t RINGBUFFER_PADDING_FACTOR = 2;
+
+		size_t numBufferFrames = framesPerBlock * RINGBUFFER_PADDING_FACTOR;
+
+		for( size_t ch = 0; ch < numChannels; ch++ ) {
+			mRingBuffers.emplace_back( numBufferFrames );
+		}
+	}
+
 	//! This callback handles non-duplexed audio input
 	static int streamCallback( const void *inputBuffer, void *outputBuffer, unsigned long framesPerBuffer, const PaStreamCallbackTimeInfo* timeInfo, PaStreamCallbackFlags statusFlags, void *userData )
 	{
@@ -164,13 +176,21 @@ struct InputDeviceNodePortAudio::Impl {
 
 		const float *in = (const float *)inputBuffer;
 
-		parent->captureAudio( in, (size_t)framesPerBuffer );
+		//parent->captureAudio( in, (size_t)framesPerBuffer );
+
+		// TODO NEXT: deinterleave to read buffer
+
+		// TODO: write to ring buffer
 
 		return paContinue;
 	}
 
 	PaStream *mStream = nullptr;
 	InputDeviceNodePortAudio*	mParent;
+
+	vector<dsp::RingBufferT<float>>		mRingBuffers; // storage for captured samples
+	BufferDynamic						mReadBuffer/*, mConvertedReadBuffer*/;
+
 };
 
 // ----------------------------------------------------------------------------------------------------
@@ -194,21 +214,24 @@ void InputDeviceNodePortAudio::initialize()
 
 	PaDeviceIndex devIndex = (PaDeviceIndex) manager->getPaDeviceIndex( getDevice() );
 	const PaDeviceInfo *devInfo = Pa_GetDeviceInfo( devIndex );
+	size_t numChannels = getNumChannels();
 
 	// Open an audio I/O stream.
 	PaStreamParameters inputParams;
 	inputParams.device = devIndex;
-	inputParams.channelCount = getNumChannels();
+	inputParams.channelCount = numChannels;
 	inputParams.sampleFormat = paFloat32;
 	inputParams.hostApiSpecificStreamInfo = NULL;
 
 	size_t framesPerBlock = getFramesPerBlock();
-	double sampleRate = getSampleRate();
+	double sampleRate = getSampleRate(); // TODO: use the samplerate of the Device, if it doesn't match the context's samplerate then install a Converter
 	inputParams.suggestedLatency = getDevice()->getFramesPerBlock() / sampleRate;	
 
 	PaStreamFlags flags = 0;
 	PaError err = Pa_OpenStream( &mImpl->mStream, &inputParams, nullptr, sampleRate, framesPerBlock, flags, &Impl::streamCallback, this );
 	CI_ASSERT( err == paNoError );
+
+	mImpl->init( numChannels, framesPerBlock );
 }
 
 void InputDeviceNodePortAudio::uninitialize()
@@ -231,10 +254,10 @@ void InputDeviceNodePortAudio::disableProcessing()
 	CI_ASSERT( err == paNoError );
 }
 
-void InputDeviceNodePortAudio::captureAudio( const float *inputBuffer, size_t framesPerBuffer )
-{
-	// TODO: write to ring buffer
-}
+//void InputDeviceNodePortAudio::captureAudio( const float *inputBuffer, size_t framesPerBuffer )
+//{
+//
+//}
 
 void InputDeviceNodePortAudio::process( Buffer *buffer )
 {

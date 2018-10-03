@@ -62,9 +62,7 @@ protected:
 	void process( Buffer *buffer )	override;
 
 private:
-	//void captureAudio( const float *inputBuffer, size_t framesPerBuffer );
 
-	//dsp::RingBuffer						mRingBuffer;
 	//std::unique_ptr<dsp::Converter>		mConverter;
 	bool								mSynchronousIO;
 

@@ -29,6 +29,9 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include "portaudio.h"
 
+#define LOG_XRUN( stream )	CI_LOG_I( stream )
+//#define LOG_XRUN( stream )	    ( (void)( 0 ) )
+
 using namespace std;
 using namespace ci;
 
@@ -157,40 +160,67 @@ struct InputDeviceNodePortAudio::Impl {
 		: mParent( parent )
 	{}
 
-	// TODO: if using duplex i/o we shouldn't need ringbuffers
-	void init( size_t numChannels, size_t framesPerBlock )
+	void init( size_t framesPerBlock, size_t numChannels )
 	{
 		const size_t RINGBUFFER_PADDING_FACTOR = 2;
 
 		size_t numBufferFrames = framesPerBlock * RINGBUFFER_PADDING_FACTOR;
 
+		mNumFramesBuffered = 0;
+
+		// TODO: if using duplex i/o we shouldn't need ringbuffers
 		for( size_t ch = 0; ch < numChannels; ch++ ) {
 			mRingBuffers.emplace_back( numBufferFrames );
 		}
+
+		mReadBuffer.setSize( framesPerBlock, numChannels );
+	}
+
+	void captureAudio( const float *audioBuffer, size_t framesPerBuffer, size_t numChannels )
+	{
+		// deinterleave to read buffer
+		mReadBuffer.setNumFrames( framesPerBuffer );
+		if( numChannels == 1 ) {
+			// TODO: remove this path if not needed once conversion is in
+			memcpy( mReadBuffer.getData(), audioBuffer, framesPerBuffer * 4 );
+		}
+		else {
+			dsp::deinterleave( (float *)audioBuffer, mReadBuffer.getData(), framesPerBuffer, numChannels, framesPerBuffer );
+		}
+
+		// write to ring buffer
+		// TODO: use Converter if installed (see Wasapi's captureAudio())
+		for( size_t ch = 0; ch < numChannels; ch++ ) {
+			if( ! mRingBuffers[ch].write( mReadBuffer.getChannel( ch ), framesPerBuffer ) ) {
+				LOG_XRUN( "[" << mParent->getContext()->getNumProcessedFrames() << "] buffer overrun. failed to read from ringbuffer, num samples to write: " << framesPerBuffer << ", channel: " << ch );
+				mParent->markOverrun();
+			}
+		}
+
+		mNumFramesBuffered += framesPerBuffer;
+
 	}
 
 	//! This callback handles non-duplexed audio input
 	static int streamCallback( const void *inputBuffer, void *outputBuffer, unsigned long framesPerBuffer, const PaStreamCallbackTimeInfo* timeInfo, PaStreamCallbackFlags statusFlags, void *userData )
 	{
 		auto parent = (InputDeviceNodePortAudio *)userData;
-
 		const float *in = (const float *)inputBuffer;
 
-		//parent->captureAudio( in, (size_t)framesPerBuffer );
+		parent->mImpl->captureAudio( in, (size_t)framesPerBuffer, parent->getNumChannels() );	
 
-		// TODO NEXT: deinterleave to read buffer
-
-		// TODO: write to ring buffer
-
+		// TODO: see docs on Pa_OpenStream()'s return value for what to return here when there is either an
+		// interruption or the appliction quits.
 		return paContinue;
 	}
 
 	PaStream *mStream = nullptr;
 	InputDeviceNodePortAudio*	mParent;
 
+	//std::unique_ptr<dsp::Converter>		mConverter; // TODO: use this when samplerate differs from context
 	vector<dsp::RingBufferT<float>>		mRingBuffers; // storage for captured samples
 	BufferDynamic						mReadBuffer/*, mConvertedReadBuffer*/;
-
+	size_t								mNumFramesBuffered;
 };
 
 // ----------------------------------------------------------------------------------------------------
@@ -231,7 +261,7 @@ void InputDeviceNodePortAudio::initialize()
 	PaError err = Pa_OpenStream( &mImpl->mStream, &inputParams, nullptr, sampleRate, framesPerBlock, flags, &Impl::streamCallback, this );
 	CI_ASSERT( err == paNoError );
 
-	mImpl->init( numChannels, framesPerBlock );
+	mImpl->init( framesPerBlock, numChannels );
 }
 
 void InputDeviceNodePortAudio::uninitialize()
@@ -254,14 +284,24 @@ void InputDeviceNodePortAudio::disableProcessing()
 	CI_ASSERT( err == paNoError );
 }
 
-//void InputDeviceNodePortAudio::captureAudio( const float *inputBuffer, size_t framesPerBuffer )
-//{
-//
-//}
-
 void InputDeviceNodePortAudio::process( Buffer *buffer )
 {
-	// TODO: read from ring buffer
+	// TODO: when duplex, don't need to use mNumFramesBuffered or RingBuffers - just copy read buffer over
+
+	// read from ring buffer
+	const size_t framesNeeded = buffer->getNumFrames();
+	if( mImpl->mNumFramesBuffered < framesNeeded ) {
+		LOG_XRUN( "[" << getContext()->getNumProcessedFrames() << "] buffer underrun. failed to read from ringbuffer, mCaptureImpl->mNumFramesBuffered: " << mImpl->mNumFramesBuffered << ", framesNeeded: " << framesNeeded );
+		markUnderrun();
+		return;
+	}
+
+	for( size_t ch = 0; ch < getNumChannels(); ch++ ) {
+		bool readSuccess = mImpl->mRingBuffers[ch].read( buffer->getChannel( ch ), framesNeeded );
+		CI_VERIFY( readSuccess );
+	}
+
+	mImpl->mNumFramesBuffered -= framesNeeded;
 }
 
 // ----------------------------------------------------------------------------------------------------

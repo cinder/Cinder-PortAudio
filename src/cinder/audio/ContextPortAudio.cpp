@@ -159,24 +159,53 @@ void OutputDeviceNodePortAudio::renderAudio( float *outputBuffer, size_t framesP
 // ----------------------------------------------------------------------------------------------------
 
 struct InputDeviceNodePortAudio::Impl {
+	const size_t RINGBUFFER_PADDING_FACTOR = 2;
+
 	Impl( InputDeviceNodePortAudio *parent )
 		: mParent( parent )
 	{}
 
-	void init( size_t framesPerBlock, size_t numChannels )
+	void init()
 	{
-		const size_t RINGBUFFER_PADDING_FACTOR = 2;
-
-		size_t numBufferFrames = framesPerBlock * RINGBUFFER_PADDING_FACTOR;
-
 		mNumFramesBuffered = 0;
+		mTotalFramesCaptured = 0;
+
+		auto device = mParent->getDevice();
+		auto manager = dynamic_cast<DeviceManagePortAudio *>( Context::deviceManager() );
+
+		PaDeviceIndex devIndex = (PaDeviceIndex) manager->getPaDeviceIndex( device );
+		//const PaDeviceInfo *devInfo = Pa_GetDeviceInfo( devIndex );
+		size_t numChannels = mParent->getNumChannels();
+
+		size_t framesPerBlock = mParent->getFramesPerBlock();
+		double sampleRate = device->getSampleRate();
+		size_t maxReadFrames = framesPerBlock * RINGBUFFER_PADDING_FACTOR;
+
+		if( sampleRate != mParent->getSampleRate() ) {
+			// samplerate doesn't match the context, install Converter
+			mConverter = audio::dsp::Converter::create( sampleRate, mParent->getSampleRate(), numChannels, numChannels, maxReadFrames );
+			//mConvertedReadBuffer.setSize( mConverter->getDestMaxFramesPerBlock(), mNumChannels );
+		}
 
 		// TODO: if using duplex i/o we shouldn't need ringbuffers
 		for( size_t ch = 0; ch < numChannels; ch++ ) {
-			mRingBuffers.emplace_back( numBufferFrames );
+			mRingBuffers.emplace_back( maxReadFrames );
 		}
 
 		mReadBuffer.setSize( framesPerBlock, numChannels );
+
+		// Open an audio I/O stream. No callbacks, we'll get pulled from the audio graph and read non-blocking
+		PaStreamParameters inputParams;
+		inputParams.device = devIndex;
+		inputParams.channelCount = numChannels;
+		inputParams.sampleFormat = paFloat32;
+		inputParams.hostApiSpecificStreamInfo = NULL;
+
+		inputParams.suggestedLatency = framesPerBlock / sampleRate;	
+
+		PaStreamFlags flags = 0;
+		PaError err = Pa_OpenStream( &mStream, &inputParams, nullptr, sampleRate, framesPerBlock, flags, nullptr, nullptr );
+		CI_VERIFY( err == paNoError );
 	}
 
 	void captureAudio( float *audioBuffer, size_t framesPerBuffer, size_t numChannels )
@@ -223,7 +252,7 @@ struct InputDeviceNodePortAudio::Impl {
 	PaStream *mStream = nullptr;
 	InputDeviceNodePortAudio*	mParent;
 
-	//std::unique_ptr<dsp::Converter>		mConverter; // TODO: use this when samplerate differs from context
+	std::unique_ptr<dsp::Converter>		mConverter;
 	vector<dsp::RingBufferT<float>>		mRingBuffers; // storage for captured samples
 	BufferDynamic						mReadBuffer/*, mConvertedReadBuffer*/;
 	size_t								mNumFramesBuffered;
@@ -247,29 +276,7 @@ InputDeviceNodePortAudio::~InputDeviceNodePortAudio()
 
 void InputDeviceNodePortAudio::initialize()
 {
-	auto manager = dynamic_cast<DeviceManagePortAudio *>( Context::deviceManager() );
-
-	// TODO (clean up): move all pa calls to impl
-	PaDeviceIndex devIndex = (PaDeviceIndex) manager->getPaDeviceIndex( getDevice() );
-	const PaDeviceInfo *devInfo = Pa_GetDeviceInfo( devIndex );
-	size_t numChannels = getNumChannels();
-
-	// Open an audio I/O stream.
-	PaStreamParameters inputParams;
-	inputParams.device = devIndex;
-	inputParams.channelCount = numChannels;
-	inputParams.sampleFormat = paFloat32;
-	inputParams.hostApiSpecificStreamInfo = NULL;
-
-	size_t framesPerBlock = getFramesPerBlock();
-	double sampleRate = getSampleRate(); // TODO: use the samplerate of the Device, if it doesn't match the context's samplerate then install a Converter
-	inputParams.suggestedLatency = getDevice()->getFramesPerBlock() / sampleRate;	
-
-	PaStreamFlags flags = 0;
-	PaError err = Pa_OpenStream( &mImpl->mStream, &inputParams, nullptr, sampleRate, framesPerBlock, flags, nullptr, nullptr );
-	CI_VERIFY( err == paNoError );
-
-	mImpl->init( framesPerBlock, numChannels );
+	mImpl->init();
 }
 
 void InputDeviceNodePortAudio::uninitialize()
@@ -278,6 +285,7 @@ void InputDeviceNodePortAudio::uninitialize()
 	CI_ASSERT( err == paNoError );
 
 	mImpl->mStream = nullptr;
+	mImpl->mConverter = nullptr;
 }
 
 void InputDeviceNodePortAudio::enableProcessing()

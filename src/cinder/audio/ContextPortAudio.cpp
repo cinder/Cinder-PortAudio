@@ -35,8 +35,6 @@ POSSIBILITY OF SUCH DAMAGE.
 //#define LOG_CAPTURE( stream )	CI_LOG_I( stream )
 #define LOG_CAPTURE( stream )	    ( (void)( 0 ) )
 
-#define SINGLE_IO_THREAD 1
-
 using namespace std;
 using namespace ci;
 
@@ -183,7 +181,6 @@ struct InputDeviceNodePortAudio::Impl {
 
 	void captureAudio( float *audioBuffer, size_t framesPerBuffer, size_t numChannels )
 	{
-#if SINGLE_IO_THREAD
 		// Using Read/Write I/O Methods
 		signed long readAvailable = Pa_GetStreamReadAvailable( mStream );
 		CI_ASSERT( readAvailable >= 0 );
@@ -206,18 +203,6 @@ struct InputDeviceNodePortAudio::Impl {
 			dsp::deinterleave( (float *)audioBuffer, mReadBuffer.getData(), framesPerBuffer, numChannels, framesPerBuffer );
 		}
 
-#else
-		// deinterleave to read buffer
-		mReadBuffer.setNumFrames( framesPerBuffer );
-		if( numChannels == 1 ) {
-			// TODO: remove this path if not needed once conversion is in
-			memcpy( mReadBuffer.getData(), audioBuffer, framesPerBuffer * 4 );
-		}
-		else {
-			dsp::deinterleave( (float *)audioBuffer, mReadBuffer.getData(), framesPerBuffer, numChannels, framesPerBuffer );
-		}
-#endif
-
 		// write to ring buffer
 		// TODO: use Converter if installed (see Wasapi's captureAudio())
 		for( size_t ch = 0; ch < numChannels; ch++ ) {
@@ -234,21 +219,6 @@ struct InputDeviceNodePortAudio::Impl {
 		LOG_CAPTURE( "[" << mParent->getContext()->getNumProcessedFrames() << "] audio thread: " << mParent->getContext()->isAudioThread() << ", frames buffered: " << mNumFramesBuffered );
 		int blarg = 2;
 	}
-
-#if ! SINGLE_IO_THREAD
-	//! This callback handles non-duplexed audio input, using a separate audio thread
-	static int streamCallback( const void *inputBuffer, void *outputBuffer, unsigned long framesPerBuffer, const PaStreamCallbackTimeInfo* timeInfo, PaStreamCallbackFlags statusFlags, void *userData )
-	{
-		auto parent = (InputDeviceNodePortAudio *)userData;
-		const float *in = (const float *)inputBuffer;
-
-		parent->mImpl->captureAudio( in, (size_t)framesPerBuffer, parent->getNumChannels() );	
-
-		// TODO: see docs on Pa_OpenStream()'s return value for what to return here when there is either an
-		// interruption or the appliction quits.
-		return paContinue;
-	}
-#endif
 
 	PaStream *mStream = nullptr;
 	InputDeviceNodePortAudio*	mParent;
@@ -279,6 +249,7 @@ void InputDeviceNodePortAudio::initialize()
 {
 	auto manager = dynamic_cast<DeviceManagePortAudio *>( Context::deviceManager() );
 
+	// TODO (clean up): move all pa calls to impl
 	PaDeviceIndex devIndex = (PaDeviceIndex) manager->getPaDeviceIndex( getDevice() );
 	const PaDeviceInfo *devInfo = Pa_GetDeviceInfo( devIndex );
 	size_t numChannels = getNumChannels();
@@ -295,12 +266,8 @@ void InputDeviceNodePortAudio::initialize()
 	inputParams.suggestedLatency = getDevice()->getFramesPerBlock() / sampleRate;	
 
 	PaStreamFlags flags = 0;
-#if SINGLE_IO_THREAD
 	PaError err = Pa_OpenStream( &mImpl->mStream, &inputParams, nullptr, sampleRate, framesPerBlock, flags, nullptr, nullptr );
-#else
-	PaError err = Pa_OpenStream( &mImpl->mStream, &inputParams, nullptr, sampleRate, framesPerBlock, flags, &Impl::streamCallback, this );
-#endif
-	CI_ASSERT( err == paNoError );
+	CI_VERIFY( err == paNoError );
 
 	mImpl->init( framesPerBlock, numChannels );
 }

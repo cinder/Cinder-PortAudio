@@ -159,7 +159,7 @@ void OutputDeviceNodePortAudio::renderAudio( float *outputBuffer, size_t framesP
 // ----------------------------------------------------------------------------------------------------
 
 struct InputDeviceNodePortAudio::Impl {
-	const size_t RINGBUFFER_PADDING_FACTOR = 2;
+	const size_t RINGBUFFER_PADDING_FACTOR = 4;
 
 	Impl( InputDeviceNodePortAudio *parent )
 		: mParent( parent )
@@ -217,7 +217,7 @@ struct InputDeviceNodePortAudio::Impl {
 		// Using Read/Write I/O Methods
 		signed long readAvailable = Pa_GetStreamReadAvailable( mStream );
 		CI_ASSERT( readAvailable >= 0 );
-		LOG_CAPTURE( "[" << mParent->getContext()->getNumProcessedFrames() << "] read available: " << readAvailable );
+		LOG_CAPTURE( "[" << mParent->getContext()->getNumProcessedFrames() << "] read available: " << readAvailable << ", ring buffer write available: " << mRingBuffers[0].getAvailableWrite() );
 		if( readAvailable <= 0 )
 			return;
 
@@ -241,17 +241,19 @@ struct InputDeviceNodePortAudio::Impl {
 		// write to ring buffer, use Converter if one was installed
 		if( mConverter ) {
 			pair<size_t, size_t> count = mConverter->convert( &mReadBuffer, &mConverterDestBuffer );
-			LOG_CAPTURE( "frames read: " << framesToRead << ", converted: " << count.second );
+			LOG_CAPTURE( "\t- frames read: " << framesToRead << ", converted: " << count.second );
 			for( size_t ch = 0; ch < numChannels; ch++ ) {
 				if( ! mRingBuffers[ch].write( mConverterDestBuffer.getChannel( ch ), count.second ) ) {
 					LOG_XRUN( "[" << mParent->getContext()->getNumProcessedFrames() << "] buffer overrun (with converter). failed to read from ringbuffer,  num samples to write: " << count.second << ", channel: " << ch );
 					mParent->markOverrun();
 				}
 			}
+
 			mNumFramesBuffered += count.second;
 			mTotalFramesCaptured += count.second;
 		}
 		else {
+			LOG_CAPTURE( "\t- frames read: " << framesToRead );
 			for( size_t ch = 0; ch < numChannels; ch++ ) {
 				if( ! mRingBuffers[ch].write( mReadBuffer.getChannel( ch ), framesToRead ) ) {
 					LOG_XRUN( "[" << mParent->getContext()->getNumProcessedFrames() << "] buffer overrun. failed to read from ringbuffer, num samples to write: " << framesToRead << ", channel: " << ch );
@@ -263,7 +265,7 @@ struct InputDeviceNodePortAudio::Impl {
 			mTotalFramesCaptured += framesToRead;
 		}
 
-		LOG_CAPTURE( "[" << mParent->getContext()->getNumProcessedFrames() << "] audio thread: " << mParent->getContext()->isAudioThread() << ", frames buffered: " << mNumFramesBuffered );
+		LOG_CAPTURE( "[" << mParent->getContext()->getNumProcessedFrames() << "] frames buffered: " << mNumFramesBuffered << ", read available: " << readAvailable << ", ring buffer write available: " << mRingBuffers[0].getAvailableWrite() );
 		int blarg = 2;
 	}
 

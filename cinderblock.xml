@@ -46,4 +46,5 @@
 
 	</platform>
 </block>
+<template>templates/Sinewave/template.xml</template>
 </cinder>

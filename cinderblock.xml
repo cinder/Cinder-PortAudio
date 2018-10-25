@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <cinder>
 <block
-	name="PortAudio"
+	name="Cinder-PortAudio"
 	id="org.libcinder.portaudio"
 	author="Richard Eakin"
 	license="MIT"
@@ -11,34 +11,39 @@
 	libraryUrl="http://www.portaudio.com/"
 	>
 
-	<includePath>lib/portaudio/include</includePath>
-	<includePath>lib/portaudio/src/common</includePath>
-
-	<includePath>lib/ASIOSDK/common</includePath>
-	<includePath>lib/ASIOSDK/host</includePath>
-	<includePath>lib/ASIOSDK/host/pc</includePath>
-
-	<header>lib/portaudio/include/portaudio.h</header>
-
-	<headerPattern>lib/portaudio/src/common/*.h</headerPattern>
-	<sourcePattern>lib/portaudio/src/common/*.c</sourcePattern>
-
+	<!-- Cinder-PortAudio specific -->
+	<includePath>src</includePath>
 	<headerPattern>src/cinder/audio/*.h</headerPattern>
 	<sourcePattern>src/cinder/audio/*.cpp</sourcePattern>
 
-	<preprocessorDefine>PD</preprocessorDefine>
-	<preprocessorDefine>USEAPI_DUMMY</preprocessorDefine>
-	<preprocessorDefine>HAVEAPI_DUMMY</preprocessorDefine>
-	<preprocessorDefine>HAVE_UNISTD_H</preprocessorDefine>
+	<!-- PortAudio specific -->
+	<includePath>lib/portaudio/include</includePath>
+	<includePath>lib/portaudio/src/common</includePath>
+	<header>lib/portaudio/include/portaudio.h</header>
+	<headerPattern>lib/portaudio/src/common/*.h</headerPattern>
+	<sourcePattern>lib/portaudio/src/common/*.c</sourcePattern>
 
 	<platform compiler="vc2015">
 		<includePath>lib/portaudio/src/os/win</includePath>
+		<headerPattern>lib/portaudio/src/os/win/*.h</headerPattern>
+		<sourcePattern>lib/portaudio/src/os/win/*.c</sourcePattern>
+
+		<!-- WASAPI host specific -->
+		<preprocessorDefine>PA_USE_WASAPI=1</preprocessorDefine>
 		<header>lib/portaudio/include/pa_win_wasapi.h</header>
-		<header>lib/portaudio/include/pa_asio.h</header>
 		<source>lib/portaudio/src/hostapi/wasapi/pa_win_wasapi.c</source>
-		<source>lib/portaudio/src/hostapi/asio/pa_asio.c</source>
-		<headerPattern>lib/portaudio/src/os/*.h</headerPattern>
-		<sourcePattern>lib/portaudio/src/os/*.c</sourcePattern>
+
+		<!-- ASIO host specific -->
+		<preprocessorDefine>PA_USE_ASIO=1</preprocessorDefine>
+		<includePath>lib/ASIOSDK/common</includePath>
+		<includePath>lib/ASIOSDK/host</includePath>
+		<includePath>lib/ASIOSDK/host/pc</includePath>
+		<header>lib/portaudio/include/pa_asio.h</header>
+		<source>lib/portaudio/src/hostapi/asio/pa_asio.cpp</source>
+		<source>lib/ASIOSDK/common/asio.cpp</source>
+		<source>lib/ASIOSDK/host/asiodrivers.cpp</source>
+		<source>lib/ASIOSDK/host/pc/asiolist.cpp</source>
+
 	</platform>
 </block>
 </cinder>

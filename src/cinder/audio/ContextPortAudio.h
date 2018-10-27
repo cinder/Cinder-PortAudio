@@ -63,7 +63,6 @@ protected:
 
 private:
 
-	//std::unique_ptr<dsp::Converter>		mConverter;
 	bool								mSynchronousIO;
 
 	struct Impl;
@@ -82,6 +81,12 @@ class ContextPortAudio : public Context {
   private:
 
 	std::vector<std::weak_ptr<Node>>	mDeviceNodes;
+};
+
+class ContextPortAudioExc : public AudioExc {
+  public:
+	ContextPortAudioExc( const std::string &description );
+	ContextPortAudioExc( const std::string &description, int err );
 };
 
 } } // namespace cinder::audio

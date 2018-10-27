@@ -101,7 +101,9 @@ void OutputDeviceNodePortAudio::initialize()
 
 	PaStreamFlags flags = 0;
 	PaError err = Pa_OpenStream( &mImpl->mStream, nullptr, &outputParams, sampleRate, framesPerBlock, flags, &Impl::streamCallback, this );
-	CI_ASSERT( err == paNoError );
+	if( err != paNoError ) {
+		throw ContextPortAudioExc( "Failed to open stream for output device named '" + getDevice()->getName(), err );
+	}
 }
 
 void OutputDeviceNodePortAudio::uninitialize()
@@ -209,7 +211,9 @@ struct InputDeviceNodePortAudio::Impl {
 
 		PaStreamFlags flags = 0;
 		PaError err = Pa_OpenStream( &mStream, &inputParams, nullptr, deviceSampleRate, framesPerBlock, flags, nullptr, nullptr );
-		CI_VERIFY( err == paNoError );
+		if( err != paNoError ) {
+			throw ContextPortAudioExc( "Failed to open stream for input device named '" + device->getName(), err );
+		}
 	}
 
 	void captureAudio( float *audioBuffer, size_t framesPerBuffer, size_t numChannels )
@@ -399,6 +403,23 @@ InputDeviceNodeRef ContextPortAudio::createInputDeviceNode( const DeviceRef &dev
 	auto result = makeNode( new InputDeviceNodePortAudio( device, format ) );
 	mDeviceNodes.push_back( result );
 	return result;
+}
+
+// ----------------------------------------------------------------------------------------------------
+// MARK: - ContextPortAudioExc
+// ----------------------------------------------------------------------------------------------------
+
+ContextPortAudioExc::ContextPortAudioExc( const std::string &description )
+	: AudioExc( description )
+{
+}
+
+ContextPortAudioExc::ContextPortAudioExc( const std::string &description, int err )
+	: AudioExc( "", err ) 
+{
+	stringstream ss;
+	ss << description << " (PaError: " << err << ", '" << Pa_GetErrorText( err ) << "')";
+	setDescription( ss.str() );
 }
 
 } } // namespace cinder::audio

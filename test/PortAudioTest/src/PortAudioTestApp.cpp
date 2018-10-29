@@ -188,16 +188,15 @@ void PortAudioTestApp::testInputOutput()
 
 	auto ctx = audio::Context::master();
 
-	//auto outputDev = audio::Device::getDefaultOutput();
-	auto outputDev = audio::Device::findDeviceByName( "Speakers (Realtek High Definition Audio)" );
-
+	auto outputDev = audio::Device::getDefaultOutput();
+	//auto outputDev = audio::Device::findDeviceByName( "Speakers (Realtek High Definition Audio)" );
 	auto outputNode = ctx->createOutputDeviceNode( outputDev );
 	ctx->setOutput( outputNode );
 
-	//auto inputDev = audio::Device::getDefaultInput();
-	auto inputDev = audio::Device::findDeviceByName( "Microphone (HD Webcam C615)" );
-
+	auto inputDev = audio::Device::getDefaultInput();
+	//auto inputDev = audio::Device::findDeviceByName( "Microphone (HD Webcam C615)" );
 	auto inputNode = ctx->createInputDeviceNode( inputDev );
+
 	mGain = ctx->makeNode( new audio::GainNode( mVolume ) );
 
 	mMonitor = ctx->makeNode( new audio::MonitorNode );

@@ -29,6 +29,8 @@
 
 namespace cinder { namespace audio {
 
+class InputDeviceNodePortAudio;
+
 class OutputDeviceNodePortAudio : public OutputDeviceNode {
   public:
 	OutputDeviceNodePortAudio( const DeviceRef &device, const Format &format );
@@ -42,10 +44,14 @@ class OutputDeviceNodePortAudio : public OutputDeviceNode {
 	bool supportsProcessInPlace() const	override	{ return false; }
 
   private:
-	  void renderAudio( float *outputBuffer, size_t framesPerBuffer );
+	  void renderAudio( const float *inputBuffer, float *outputBuffer, size_t framesPerBuffer );
 
 	  struct Impl;
 	  std::unique_ptr<Impl>		mImpl;
+	  bool						mFullDuplexIO;
+	  InputDeviceNodePortAudio* mFullDuplexInputDeviceNode;
+		
+	  friend class InputDeviceNodePortAudio;
 };
 
 class InputDeviceNodePortAudio : public InputDeviceNode {
@@ -62,11 +68,12 @@ protected:
 	void process( Buffer *buffer )	override;
 
 private:
-
-	bool								mSynchronousIO;
-
 	struct Impl;
 	std::unique_ptr<Impl>		mImpl;
+	bool						mFullDuplexIO;
+	const float*				mFullDuplexInputBuffer;
+
+	friend class OutputDeviceNodePortAudio;
 };
 
 class ContextPortAudio : public Context {
@@ -81,6 +88,8 @@ class ContextPortAudio : public Context {
   private:
 
 	std::vector<std::weak_ptr<Node>>	mDeviceNodes;
+
+	friend class OutputDeviceNodePortAudio;
 };
 
 class ContextPortAudioExc : public AudioExc {

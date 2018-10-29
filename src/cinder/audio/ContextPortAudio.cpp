@@ -32,6 +32,9 @@ POSSIBILITY OF SUCH DAMAGE.
 #define LOG_XRUN( stream )	CI_LOG_I( stream )
 //#define LOG_XRUN( stream )	    ( (void)( 0 ) )
 
+#define LOG_CI_PORTAUDIO( stream )	CI_LOG_I( stream )
+//#define LOG_CINDER_PORTAUDIO( stream )	    ( (void)( 0 ) )
+
 #define LOG_CAPTURE( stream )	CI_LOG_I( stream )
 //#define LOG_CAPTURE( stream )	    ( (void)( 0 ) )
 
@@ -54,9 +57,10 @@ struct OutputDeviceNodePortAudio::Impl {
 		auto parent = (OutputDeviceNodePortAudio *)userData;
 
 		float *out = (float*)outputBuffer;
-		//const float *in = (const float *)inputBuffer; // TODO: for duplex input this will need to be sent to renderAudio() also
-		
-		parent->renderAudio( out, (size_t)framesPerBuffer );
+		const float *in = (const float *)inputBuffer; // needed in the case of full duplex I/O
+
+		LOG_CAPTURE( "framesPerBuffer: " << framesPerBuffer << ", statusFlags: " << statusFlags << hex << ", input buffer: " << inputBuffer << ", outputBuffer: " << outputBuffer << dec );		
+		parent->renderAudio( in, out, (size_t)framesPerBuffer );
 
 		return paContinue;
 	}
@@ -70,10 +74,10 @@ struct OutputDeviceNodePortAudio::Impl {
 // ----------------------------------------------------------------------------------------------------
 
 OutputDeviceNodePortAudio::OutputDeviceNodePortAudio( const DeviceRef &device, const Format &format )
-	: OutputDeviceNode( device, format ), mImpl( new Impl( this ) )
+	: OutputDeviceNode( device, format ), mImpl( new Impl( this ) ), mFullDuplexIO( false ), mFullDuplexInputDeviceNode( false )
 {
-	CI_LOG_I( "device key: " << device->getKey() );
-	CI_LOG_I( "device channels: " << device->getNumOutputChannels() << ", samplerate: " << device->getSampleRate() << ", framesPerBlock: " << device->getFramesPerBlock() );
+	LOG_CI_PORTAUDIO( "device key: " << device->getKey() );
+	LOG_CI_PORTAUDIO( "device channels: " << device->getNumOutputChannels() << ", samplerate: " << device->getSampleRate() << ", framesPerBlock: " << device->getFramesPerBlock() );
 }
 
 OutputDeviceNodePortAudio::~OutputDeviceNodePortAudio()
@@ -82,6 +86,8 @@ OutputDeviceNodePortAudio::~OutputDeviceNodePortAudio()
 
 void OutputDeviceNodePortAudio::initialize()
 {
+	LOG_CI_PORTAUDIO( "bang" );
+
 	auto manager = dynamic_cast<DeviceManagePortAudio *>( Context::deviceManager() );
 
 	PaDeviceIndex devIndex = (PaDeviceIndex) manager->getPaDeviceIndex( getDevice() );
@@ -99,10 +105,46 @@ void OutputDeviceNodePortAudio::initialize()
 	double sampleRate = getOutputSampleRate();
 	outputParams.suggestedLatency = getDevice()->getFramesPerBlock() / sampleRate;	
 
-	PaStreamFlags flags = 0;
-	PaError err = Pa_OpenStream( &mImpl->mStream, nullptr, &outputParams, sampleRate, framesPerBlock, flags, &Impl::streamCallback, this );
-	if( err != paNoError ) {
-		throw ContextPortAudioExc( "Failed to open stream for output device named '" + getDevice()->getName(), err );
+	// check if any current device nodes are an input device node and have this same device
+	auto ctx = dynamic_pointer_cast<ContextPortAudio>( getContext() );
+	for( const auto &weakNode : ctx->mDeviceNodes ) {
+		auto node = weakNode.lock();
+
+	auto inputDeviceNode = dynamic_pointer_cast<InputDeviceNodePortAudio>( node );
+	if( inputDeviceNode ) {
+			LOG_CI_PORTAUDIO( "\t- found input device node" );
+
+			if( getDevice() == inputDeviceNode->getDevice() ) {
+				mFullDuplexIO = true;
+				mFullDuplexInputDeviceNode = inputDeviceNode.get();
+				break;
+			}
+		}
+	}
+
+	// if full duplex I/O, this output node's stream will be used instead of the input node
+	PaStreamFlags streamFlags = 0;
+	if( mFullDuplexIO ) {
+		LOG_CI_PORTAUDIO( "\t- opening full duplex stream" );
+		mFullDuplexIO = true;
+		PaStreamParameters inputParams;
+		inputParams.device = devIndex;
+		inputParams.channelCount = getNumChannels();
+		inputParams.sampleFormat = paFloat32;
+		inputParams.hostApiSpecificStreamInfo = NULL;
+		inputParams.suggestedLatency = getDevice()->getFramesPerBlock() / sampleRate;
+
+		PaError err = Pa_OpenStream( &mImpl->mStream, &inputParams, &outputParams, sampleRate, framesPerBlock, streamFlags, &Impl::streamCallback, this );
+		if( err != paNoError ) {
+			throw ContextPortAudioExc( "Failed to open stream for output device named '" + getDevice()->getName() + " (full duplex)", err );
+		}
+	}
+	else {
+		LOG_CI_PORTAUDIO( "\t- opening half duplex stream" );
+		PaError err = Pa_OpenStream( &mImpl->mStream, nullptr, &outputParams, sampleRate, framesPerBlock, streamFlags, &Impl::streamCallback, this );
+		if( err != paNoError ) {
+			throw ContextPortAudioExc( "Failed to open stream for output device named '" + getDevice()->getName() + " (half duplex)", err );
+		}
 	}
 }
 
@@ -126,7 +168,7 @@ void OutputDeviceNodePortAudio::disableProcessing()
 	CI_ASSERT( err == paNoError );
 }
 
-void OutputDeviceNodePortAudio::renderAudio( float *outputBuffer, size_t framesPerBuffer )
+void OutputDeviceNodePortAudio::renderAudio( const float *inputBuffer, float *outputBuffer, size_t framesPerBuffer )
 {
 	auto ctx = getContext();
 	if( ! ctx )
@@ -139,7 +181,13 @@ void OutputDeviceNodePortAudio::renderAudio( float *outputBuffer, size_t framesP
 	if( ! ctx )
 		return;
 
+	CI_ASSERT( framesPerBuffer == getOutputFramesPerBlock() ); // currently expecting these to always match
+
 	ctx->preProcess();
+
+	if( mFullDuplexInputDeviceNode ) {
+		mFullDuplexInputDeviceNode->mFullDuplexInputBuffer = inputBuffer;
+	}
 
 	auto internalBuffer = getInternalBuffer();
 	internalBuffer->zero();
@@ -172,11 +220,10 @@ struct InputDeviceNodePortAudio::Impl {
 		mNumFramesBuffered = 0;
 		mTotalFramesCaptured = 0;
 
-		auto device = mParent->getDevice();
-		auto manager = dynamic_cast<DeviceManagePortAudio *>( Context::deviceManager() );
 
+		auto manager = dynamic_cast<DeviceManagePortAudio *>( Context::deviceManager() );
+		auto device = mParent->getDevice();
 		PaDeviceIndex devIndex = (PaDeviceIndex) manager->getPaDeviceIndex( device );
-		//const PaDeviceInfo *devInfo = Pa_GetDeviceInfo( devIndex );
 		size_t numChannels = mParent->getNumChannels();
 
 		size_t framesPerBlock = mParent->getFramesPerBlock(); // frames per block for the audio graph / context
@@ -200,19 +247,21 @@ struct InputDeviceNodePortAudio::Impl {
 
 		mReadBuffer.setSize( deviceFramesPerBlock, numChannels );
 
-		// Open an audio I/O stream. No callbacks, we'll get pulled from the audio graph and read non-blocking
-		PaStreamParameters inputParams;
-		inputParams.device = devIndex;
-		inputParams.channelCount = numChannels;
-		inputParams.sampleFormat = paFloat32;
-		inputParams.hostApiSpecificStreamInfo = NULL;
+		if( ! mParent->mFullDuplexIO ) {
+			// Open an audio I/O stream. No callbacks, we'll get pulled from the audio graph and read non-blocking
+			PaStreamParameters inputParams;
+			inputParams.device = devIndex;
+			inputParams.channelCount = numChannels;
+			inputParams.sampleFormat = paFloat32;
+			inputParams.hostApiSpecificStreamInfo = NULL;
 
-		inputParams.suggestedLatency = framesPerBlock / deviceSampleRate;	
+			inputParams.suggestedLatency = framesPerBlock / deviceSampleRate;	
 
-		PaStreamFlags flags = 0;
-		PaError err = Pa_OpenStream( &mStream, &inputParams, nullptr, deviceSampleRate, framesPerBlock, flags, nullptr, nullptr );
-		if( err != paNoError ) {
-			throw ContextPortAudioExc( "Failed to open stream for input device named '" + device->getName(), err );
+			PaStreamFlags flags = 0;
+			PaError err = Pa_OpenStream( &mStream, &inputParams, nullptr, deviceSampleRate, framesPerBlock, flags, nullptr, nullptr );
+			if( err != paNoError ) {
+				throw ContextPortAudioExc( "Failed to open stream for input device named '" + device->getName(), err );
+			}
 		}
 	}
 
@@ -289,10 +338,10 @@ struct InputDeviceNodePortAudio::Impl {
 // ----------------------------------------------------------------------------------------------------
 
 InputDeviceNodePortAudio::InputDeviceNodePortAudio( const DeviceRef &device, const Format &format )
-	: InputDeviceNode( device, format ), mImpl( new Impl( this ) )
+	: InputDeviceNode( device, format ), mImpl( new Impl( this ) ), mFullDuplexIO( false ), mFullDuplexInputBuffer( nullptr )
 {
-	CI_LOG_I( "device key: " << device->getKey() );
-	CI_LOG_I( "device channels: " << device->getNumInputChannels() << ", samplerate: " << device->getSampleRate() << ", framesPerBlock: " << device->getFramesPerBlock() );
+	LOG_CI_PORTAUDIO( "device key: " << device->getKey() );
+	LOG_CI_PORTAUDIO( "device channels: " << device->getNumInputChannels() << ", samplerate: " << device->getSampleRate() << ", framesPerBlock: " << device->getFramesPerBlock() );
 }
 
 InputDeviceNodePortAudio::~InputDeviceNodePortAudio()
@@ -301,13 +350,47 @@ InputDeviceNodePortAudio::~InputDeviceNodePortAudio()
 
 void InputDeviceNodePortAudio::initialize()
 {
+	LOG_CI_PORTAUDIO( "bang" );
+
+	// compare device to context output device, if they are the same key then we know we need to setup duplex audio
+	auto outputDeviceNode = dynamic_pointer_cast<OutputDeviceNodePortAudio>( getContext()->getOutput() );
+	if( getDevice() == outputDeviceNode->getDevice() ) {
+		LOG_CI_PORTAUDIO( "\t- setting up duplex audio.." );
+
+		mFullDuplexIO = true;
+		if( ! outputDeviceNode->mFullDuplexIO ) {
+			LOG_CI_PORTAUDIO( "\t- OutputDeviceNode needs re-initializing." );
+
+			outputDeviceNode->mFullDuplexIO = true;
+
+			bool outputWasInitialized = outputDeviceNode->isInitialized();
+			bool outputWasEnabled = outputDeviceNode->isEnabled();
+			if( outputWasInitialized ) {
+				outputDeviceNode->disable();
+				outputDeviceNode->uninitialize();
+			}
+
+			if( outputWasInitialized )
+				outputDeviceNode->initialize();
+
+			if( outputWasEnabled )
+				outputDeviceNode->enable();
+		}
+	}
+	else {
+		mFullDuplexIO = false;
+		mFullDuplexInputBuffer = nullptr;
+	}
+
 	mImpl->init();
 }
 
 void InputDeviceNodePortAudio::uninitialize()
 {
-	PaError err = Pa_CloseStream( mImpl->mStream );
-	CI_ASSERT( err == paNoError );
+	if( mImpl->mStream ) {
+		PaError err = Pa_CloseStream( mImpl->mStream );
+		CI_VERIFY( err == paNoError );
+	}
 
 	mImpl->mStream = nullptr;
 	mImpl->mConverter = nullptr;
@@ -315,18 +398,18 @@ void InputDeviceNodePortAudio::uninitialize()
 
 void InputDeviceNodePortAudio::enableProcessing()
 {
-	PaError err = Pa_StartStream( mImpl->mStream );
-	CI_ASSERT( err == paNoError );
+	if( mImpl->mStream ) {
+		PaError err = Pa_StartStream( mImpl->mStream );
+		CI_VERIFY( err == paNoError );
+	}
 }
 
 void InputDeviceNodePortAudio::disableProcessing()
 {
-	LOG_CAPTURE( "bang" );
-
-	PaError err = Pa_StopStream( mImpl->mStream );
-	CI_ASSERT( err == paNoError );
-
-	LOG_CAPTURE( "complete" );
+	if( mImpl->mStream ) {
+		PaError err = Pa_StopStream( mImpl->mStream );
+		CI_VERIFY( err == paNoError );
+	}
 }
 
 // TODO: when duplex, don't need to use mNumFramesBuffered or RingBuffers - just copy read buffer over
@@ -334,30 +417,39 @@ void InputDeviceNodePortAudio::process( Buffer *buffer )
 {
 	// read from ring buffer
 	const size_t framesNeeded = buffer->getNumFrames();
-	LOG_CAPTURE( "[" << getContext()->getNumProcessedFrames() << "] audio thread: " << getContext()->isAudioThread() << ",  frames buffered: " << mImpl->mNumFramesBuffered << ", frames needed: " << framesNeeded );
 
-	// TODO: might have to do this is a for loop to get as many as we can
-	mImpl->captureAudio( buffer->getData(), framesNeeded, buffer->getNumChannels() );
+	if( mFullDuplexIO ) {
+		LOG_CAPTURE( "copying duplex buffer " );
 
-	if( mImpl->mNumFramesBuffered < framesNeeded ) {
-		// only mark underrun once audio capture has begun
-		if( mImpl->mTotalFramesCaptured >= framesNeeded ) {
-			LOG_XRUN( "[" << getContext()->getNumProcessedFrames() << "] buffer underrun. failed to read from ringbuffer, framesNeeded: " << framesNeeded << ", frames buffered: " << mImpl->mNumFramesBuffered << ", total captured: " << mImpl->mTotalFramesCaptured );
-			markUnderrun();
-		}
-		return;
+		CI_ASSERT( mFullDuplexInputBuffer );
+		dsp::deinterleave( mFullDuplexInputBuffer, buffer->getData(), buffer->getNumFrames(), buffer->getNumChannels(), buffer->getNumFrames() );
 	}
+	else {
+		LOG_CAPTURE( "[" << getContext()->getNumProcessedFrames() << "] audio thread: " << getContext()->isAudioThread() << ",  frames buffered: " << mImpl->mNumFramesBuffered << ", frames needed: " << framesNeeded );
 
-	for( size_t ch = 0; ch < getNumChannels(); ch++ ) {
-		bool readSuccess = mImpl->mRingBuffers[ch].read( buffer->getChannel( ch ), framesNeeded );
-		//CI_VERIFY( readSuccess );
-		if( ! readSuccess ) {
-			LOG_XRUN( "[" << getContext()->getNumProcessedFrames() << "] buffer underrun. failed to read from ringbuffer, framesNeeded: " << framesNeeded << ", frames buffered: " << mImpl->mNumFramesBuffered << ", total captured: " << mImpl->mTotalFramesCaptured );
-			markUnderrun();
+		// TODO: might have to do this is a for loop to get as many as we can
+		mImpl->captureAudio( buffer->getData(), framesNeeded, buffer->getNumChannels() );
+
+		if( mImpl->mNumFramesBuffered < framesNeeded ) {
+			// only mark underrun once audio capture has begun
+			if( mImpl->mTotalFramesCaptured >= framesNeeded ) {
+				LOG_XRUN( "[" << getContext()->getNumProcessedFrames() << "] buffer underrun. failed to read from ringbuffer, framesNeeded: " << framesNeeded << ", frames buffered: " << mImpl->mNumFramesBuffered << ", total captured: " << mImpl->mTotalFramesCaptured );
+				markUnderrun();
+			}
+			return;
 		}
-	}
 
-	mImpl->mNumFramesBuffered -= framesNeeded;
+		for( size_t ch = 0; ch < getNumChannels(); ch++ ) {
+			bool readSuccess = mImpl->mRingBuffers[ch].read( buffer->getChannel( ch ), framesNeeded );
+			//CI_VERIFY( readSuccess );
+			if( ! readSuccess ) {
+				LOG_XRUN( "[" << getContext()->getNumProcessedFrames() << "] buffer underrun. failed to read from ringbuffer, framesNeeded: " << framesNeeded << ", frames buffered: " << mImpl->mNumFramesBuffered << ", total captured: " << mImpl->mTotalFramesCaptured );
+				markUnderrun();
+			}
+		}
+
+		mImpl->mNumFramesBuffered -= framesNeeded;
+	}
 }
 
 // ----------------------------------------------------------------------------------------------------
@@ -395,6 +487,7 @@ OutputDeviceNodeRef	ContextPortAudio::createOutputDeviceNode( const DeviceRef &d
 {
 	auto result = makeNode( new OutputDeviceNodePortAudio( device, format ) );
 	mDeviceNodes.push_back( result );
+	LOG_CI_PORTAUDIO( "created OutputDeviceNodePortAudio for device named '" << device->getName() << "'" );
 	return result;
 }
 
@@ -402,6 +495,7 @@ InputDeviceNodeRef ContextPortAudio::createInputDeviceNode( const DeviceRef &dev
 {
 	auto result = makeNode( new InputDeviceNodePortAudio( device, format ) );
 	mDeviceNodes.push_back( result );
+	LOG_CI_PORTAUDIO( "created InputDeviceNodePortAudio for device named '" << device->getName() << "'" );
 	return result;
 }
 

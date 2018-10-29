@@ -35,8 +35,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #define LOG_CI_PORTAUDIO( stream )	CI_LOG_I( stream )
 //#define LOG_CINDER_PORTAUDIO( stream )	    ( (void)( 0 ) )
 
-#define LOG_CAPTURE( stream )	CI_LOG_I( stream )
-//#define LOG_CAPTURE( stream )	    ( (void)( 0 ) )
+//#define LOG_CAPTURE( stream )	CI_LOG_I( stream )
+#define LOG_CAPTURE( stream )	    ( (void)( 0 ) )
 
 using namespace std;
 using namespace ci;
@@ -220,6 +220,12 @@ struct InputDeviceNodePortAudio::Impl {
 		mNumFramesBuffered = 0;
 		mTotalFramesCaptured = 0;
 
+		if( mParent->mFullDuplexIO ) {
+			// OutputDeviceNodePortAudio will provide the input buffer each frame, we don't need extra buffers or a stream.
+			mReadBuffer = {};
+			mRingBuffers.clear();
+			return;
+		}
 
 		auto manager = dynamic_cast<DeviceManagePortAudio *>( Context::deviceManager() );
 		auto device = mParent->getDevice();
@@ -240,28 +246,25 @@ struct InputDeviceNodePortAudio::Impl {
 			mMaxReadFrames = framesPerBlock;
 		}
 
-		// TODO: if using duplex i/o we shouldn't need ringbuffers
 		for( size_t ch = 0; ch < numChannels; ch++ ) {
 			mRingBuffers.emplace_back( framesPerBlock * RINGBUFFER_PADDING_FACTOR );
 		}
 
 		mReadBuffer.setSize( deviceFramesPerBlock, numChannels );
 
-		if( ! mParent->mFullDuplexIO ) {
-			// Open an audio I/O stream. No callbacks, we'll get pulled from the audio graph and read non-blocking
-			PaStreamParameters inputParams;
-			inputParams.device = devIndex;
-			inputParams.channelCount = numChannels;
-			inputParams.sampleFormat = paFloat32;
-			inputParams.hostApiSpecificStreamInfo = NULL;
+		// Open an audio I/O stream. No callbacks, we'll get pulled from the audio graph and read non-blocking
+		PaStreamParameters inputParams;
+		inputParams.device = devIndex;
+		inputParams.channelCount = numChannels;
+		inputParams.sampleFormat = paFloat32;
+		inputParams.hostApiSpecificStreamInfo = NULL;
 
-			inputParams.suggestedLatency = framesPerBlock / deviceSampleRate;	
+		inputParams.suggestedLatency = framesPerBlock / deviceSampleRate;	
 
-			PaStreamFlags flags = 0;
-			PaError err = Pa_OpenStream( &mStream, &inputParams, nullptr, deviceSampleRate, framesPerBlock, flags, nullptr, nullptr );
-			if( err != paNoError ) {
-				throw ContextPortAudioExc( "Failed to open stream for input device named '" + device->getName(), err );
-			}
+		PaStreamFlags flags = 0;
+		PaError err = Pa_OpenStream( &mStream, &inputParams, nullptr, deviceSampleRate, framesPerBlock, flags, nullptr, nullptr );
+		if( err != paNoError ) {
+			throw ContextPortAudioExc( "Failed to open stream for input device named '" + device->getName(), err );
 		}
 	}
 
@@ -278,7 +281,6 @@ struct InputDeviceNodePortAudio::Impl {
 		mReadBuffer.setNumFrames( framesToRead );
 		if( numChannels == 1 ) {
 			// capture directly into mReadBuffer
-			// TODO: remove this path if not needed once conversion is in
 			PaError err = Pa_ReadStream( mStream, mReadBuffer.getData(), framesToRead );
 			CI_VERIFY( err == paNoError );
 		}
@@ -412,19 +414,19 @@ void InputDeviceNodePortAudio::disableProcessing()
 	}
 }
 
-// TODO: when duplex, don't need to use mNumFramesBuffered or RingBuffers - just copy read buffer over
 void InputDeviceNodePortAudio::process( Buffer *buffer )
 {
-	// read from ring buffer
-	const size_t framesNeeded = buffer->getNumFrames();
-
 	if( mFullDuplexIO ) {
+		// read from the buffer provided by OutputDeviceNodePortAudio
 		LOG_CAPTURE( "copying duplex buffer " );
-
 		CI_ASSERT( mFullDuplexInputBuffer );
+		
 		dsp::deinterleave( mFullDuplexInputBuffer, buffer->getData(), buffer->getNumFrames(), buffer->getNumChannels(), buffer->getNumFrames() );
 	}
 	else {
+		// read from ring buffer
+		const size_t framesNeeded = buffer->getNumFrames();
+
 		LOG_CAPTURE( "[" << getContext()->getNumProcessedFrames() << "] audio thread: " << getContext()->isAudioThread() << ",  frames buffered: " << mImpl->mNumFramesBuffered << ", frames needed: " << framesNeeded );
 
 		// TODO: might have to do this is a for loop to get as many as we can

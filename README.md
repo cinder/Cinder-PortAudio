@@ -25,7 +25,7 @@ lib/ASIOSDK/host/pc/asiolist.cpp
 
 #### Enabling Unicode Character Set
 
-TO enable buildiing with Unicode Character Set (Configuration Properties -> General -> Character Set), you need to add the following line to the top of _lib/ASIOSDK/host/pc/asiolist.cpp_, directly above the <#include "windows.h>`:
+To enable buildiing with Unicode Character Set (Configuration Properties -> General -> Character Set), you need to add the following line to the top of _lib/ASIOSDK/host/pc/asiolist.cpp_, directly above the <#include "windows.h>`:
 
 ```
 #undef UNICODE

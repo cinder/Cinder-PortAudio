@@ -190,11 +190,13 @@ void PortAudioTestApp::testInputOutput()
 
 	auto outputDev = audio::Device::getDefaultOutput();
 	//auto outputDev = audio::Device::findDeviceByName( "Speakers (Realtek High Definition Audio)" );
+	//auto outputDev = audio::Device::findOutputByName( "Focusrite USB (Focusrite USB Audio)" );
 	auto outputNode = ctx->createOutputDeviceNode( outputDev );
 	ctx->setOutput( outputNode );
 
 	auto inputDev = audio::Device::getDefaultInput();
 	//auto inputDev = audio::Device::findDeviceByName( "Microphone (HD Webcam C615)" );
+	//auto inputDev = audio::Device::findInputByName( "Focusrite USB (Focusrite USB Audio)" );
 	auto inputNode = ctx->createInputDeviceNode( inputDev );
 
 	mGain = ctx->makeNode( new audio::GainNode( mVolume ) );
@@ -274,6 +276,12 @@ void PortAudioTestApp::keyDown( KeyEvent event )
 		if( mGain ) {
 			mGain->getParam()->applyRamp( mVolume, 0.3f );
 		}
+	}
+	else if( event.getChar() == 'c' ) {
+		CI_LOG_I( "clearing graph and switching to simple output" );
+
+		audio::master()->disconnectAllNodes();
+		testSimple();
 	}
 }
 

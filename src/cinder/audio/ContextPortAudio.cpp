@@ -29,7 +29,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include "portaudio.h"
 
-#define LOG_XRUN( stream )	CI_LOG_I( stream )
+#define LOG_XRUN( stream )	CI_LOG_W( stream )
 //#define LOG_XRUN( stream )	    ( (void)( 0 ) )
 
 #define LOG_CI_PORTAUDIO( stream )	CI_LOG_I( stream )
@@ -351,6 +351,7 @@ InputDeviceNodePortAudio::InputDeviceNodePortAudio( const DeviceRef &device, con
 
 InputDeviceNodePortAudio::~InputDeviceNodePortAudio()
 {
+	LOG_CI_PORTAUDIO( "bang" );
 }
 
 void InputDeviceNodePortAudio::initialize()
@@ -392,6 +393,7 @@ void InputDeviceNodePortAudio::initialize()
 
 void InputDeviceNodePortAudio::uninitialize()
 {
+	LOG_CI_PORTAUDIO( "bang" );
 	if( mImpl->mStream ) {
 		PaError err = Pa_CloseStream( mImpl->mStream );
 		CI_VERIFY( err == paNoError );
@@ -403,6 +405,7 @@ void InputDeviceNodePortAudio::uninitialize()
 
 void InputDeviceNodePortAudio::enableProcessing()
 {
+	LOG_CI_PORTAUDIO( "bang" );
 	if( mImpl->mStream ) {
 		PaError err = Pa_StartStream( mImpl->mStream );
 		CI_VERIFY( err == paNoError );
@@ -411,6 +414,7 @@ void InputDeviceNodePortAudio::enableProcessing()
 
 void InputDeviceNodePortAudio::disableProcessing()
 {
+	LOG_CI_PORTAUDIO( "bang" );
 	if( mImpl->mStream ) {
 		PaError err = Pa_StopStream( mImpl->mStream );
 		CI_VERIFY( err == paNoError );
@@ -432,13 +436,12 @@ void InputDeviceNodePortAudio::process( Buffer *buffer )
 
 		LOG_CAPTURE( "[" << getContext()->getNumProcessedFrames() << "] audio thread: " << getContext()->isAudioThread() << ",  frames buffered: " << mImpl->mNumFramesBuffered << ", frames needed: " << framesNeeded );
 
-		// TODO: might have to do this is a for loop to get as many as we can
 		mImpl->captureAudio( buffer->getData(), framesNeeded, buffer->getNumChannels() );
 
 		if( mImpl->mNumFramesBuffered < framesNeeded ) {
 			// only mark underrun once audio capture has begun
 			if( mImpl->mTotalFramesCaptured >= framesNeeded ) {
-				LOG_XRUN( "[" << getContext()->getNumProcessedFrames() << "] buffer underrun. failed to read from ringbuffer, framesNeeded: " << framesNeeded << ", frames buffered: " << mImpl->mNumFramesBuffered << ", total captured: " << mImpl->mTotalFramesCaptured );
+				LOG_XRUN( "[" << getContext()->getNumProcessedFrames() << "] buffer underrun. total frames buffered: " << mImpl->mNumFramesBuffered << ", less than frames needed: " << framesNeeded << ", total captured: " << mImpl->mTotalFramesCaptured );
 				markUnderrun();
 			}
 			return;

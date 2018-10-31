@@ -1,0 +1,232 @@
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+    <Filter Include="Blocks">
+      <UniqueIdentifier>{EC8D6A3D-3AC4-47D1-AB90-C836D1035C39}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\Cinder-PortAudio">
+      <UniqueIdentifier>{223213AE-CA60-45EE-B27E-42AF8DFB5A61}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\Cinder-PortAudio\src">
+      <UniqueIdentifier>{3224F40D-BEBF-4A3B-8F96-3E811CC6F034}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\Cinder-PortAudio\src\cinder">
+      <UniqueIdentifier>{66EA68CE-2F14-4EDB-9204-4ACF8145B73A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\Cinder-PortAudio\src\cinder\audio">
+      <UniqueIdentifier>{92DFD015-ECF5-4043-96B1-0B15AD2FE32E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\Cinder-PortAudio\lib">
+      <UniqueIdentifier>{F7F5F361-08B4-45D0-8F93-7F71FA9CFF37}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\Cinder-PortAudio\lib\portaudio">
+      <UniqueIdentifier>{C0001FEB-7FC0-4061-8F4F-B6FB8EF0EC1C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\Cinder-PortAudio\lib\portaudio\include">
+      <UniqueIdentifier>{FAEDE631-292B-4FEC-BC6E-3C0322C36BC1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\Cinder-PortAudio\lib\portaudio\src">
+      <UniqueIdentifier>{C286FFD7-066A-4348-A04F-38343460703C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\Cinder-PortAudio\lib\portaudio\src\common">
+      <UniqueIdentifier>{525C2B8B-CC05-449C-A9D5-05691E00D854}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\Cinder-PortAudio\lib\portaudio\src\os">
+      <UniqueIdentifier>{FA17286D-CCBC-4FA3-AC75-6B7D57CE51F6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\Cinder-PortAudio\lib\portaudio\src\os\win">
+      <UniqueIdentifier>{9F428127-B500-494F-8956-9BC0368A1BF5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\Cinder-PortAudio\lib\portaudio\src\hostapi">
+      <UniqueIdentifier>{72DDF2C3-8389-431E-8448-347174953BC2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\Cinder-PortAudio\lib\portaudio\src\hostapi\wasapi">
+      <UniqueIdentifier>{877BC3A0-693A-4369-9397-DCDAB9ABAFA7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\Cinder-PortAudio\lib\portaudio\src\hostapi\asio">
+      <UniqueIdentifier>{5B5F4447-F24B-400D-B57D-EB2FC84F6592}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\Cinder-PortAudio\lib\ASIOSDK">
+      <UniqueIdentifier>{D275542C-EBE3-4119-A0F5-9559B53DD986}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\Cinder-PortAudio\lib\ASIOSDK\common">
+      <UniqueIdentifier>{72C9EB20-370B-4EFA-8337-D4B92A35BCE8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\Cinder-PortAudio\lib\ASIOSDK\host">
+      <UniqueIdentifier>{5D41A531-F848-4FE9-BA4D-2525C4B93169}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\Cinder-PortAudio\lib\ASIOSDK\host\pc">
+      <UniqueIdentifier>{D692EE1E-3F7E-45C7-8378-0EE3039103C3}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\PortAudioBasicApp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClInclude Include="..\include\Resources.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClCompile Include="..\src\PortAudioBasicApp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\..\src\cinder\audio\ContextPortAudio.h">
+      <Filter>Blocks\Cinder-PortAudio\src\cinder\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\cinder\audio\DeviceManagerPortAudio.h">
+      <Filter>Blocks\Cinder-PortAudio\src\cinder\audio</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\..\src\cinder\audio\ContextPortAudio.cpp">
+      <Filter>Blocks\Cinder-PortAudio\src\cinder\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cinder\audio\DeviceManagerPortAudio.cpp">
+      <Filter>Blocks\Cinder-PortAudio\src\cinder\audio</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\..\lib\portaudio\include\portaudio.h">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\portaudio\src\common\pa_allocation.h">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\portaudio\src\common\pa_converters.h">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\portaudio\src\common\pa_cpuload.h">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\portaudio\src\common\pa_debugprint.h">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\portaudio\src\common\pa_dither.h">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\portaudio\src\common\pa_endianness.h">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\portaudio\src\common\pa_gitrevision.h">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\portaudio\src\common\pa_hostapi.h">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\portaudio\src\common\pa_memorybarrier.h">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\portaudio\src\common\pa_process.h">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\portaudio\src\common\pa_ringbuffer.h">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\portaudio\src\common\pa_stream.h">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\portaudio\src\common\pa_trace.h">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\portaudio\src\common\pa_types.h">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\portaudio\src\common\pa_util.h">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\common</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\..\lib\portaudio\src\common\pa_allocation.c">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\portaudio\src\common\pa_converters.c">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\portaudio\src\common\pa_cpuload.c">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\portaudio\src\common\pa_debugprint.c">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\portaudio\src\common\pa_dither.c">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\portaudio\src\common\pa_front.c">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\portaudio\src\common\pa_process.c">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\portaudio\src\common\pa_ringbuffer.c">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\portaudio\src\common\pa_stream.c">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\portaudio\src\common\pa_trace.c">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\common</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\..\lib\portaudio\src\os\win\pa_win_coinitialize.h">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\os\win</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\portaudio\src\os\win\pa_win_wdmks_utils.h">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\os\win</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lib\portaudio\src\os\win\pa_x86_plain_converters.h">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\os\win</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\..\lib\portaudio\src\os\win\pa_win_coinitialize.c">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\os\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\portaudio\src\os\win\pa_win_hostapis.c">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\os\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\portaudio\src\os\win\pa_win_util.c">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\os\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\portaudio\src\os\win\pa_win_waveformat.c">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\os\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\portaudio\src\os\win\pa_win_wdmks_utils.c">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\os\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\portaudio\src\os\win\pa_x86_plain_converters.c">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\os\win</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\..\lib\portaudio\include\pa_win_wasapi.h">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\include</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\..\lib\portaudio\src\hostapi\wasapi\pa_win_wasapi.c">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\hostapi\wasapi</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\..\lib\portaudio\include\pa_asio.h">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\include</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\..\lib\portaudio\src\hostapi\asio\pa_asio.cpp">
+      <Filter>Blocks\Cinder-PortAudio\lib\portaudio\src\hostapi\asio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\ASIOSDK\common\asio.cpp">
+      <Filter>Blocks\Cinder-PortAudio\lib\ASIOSDK\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\ASIOSDK\host\asiodrivers.cpp">
+      <Filter>Blocks\Cinder-PortAudio\lib\ASIOSDK\host</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lib\ASIOSDK\host\pc\asiolist.cpp">
+      <Filter>Blocks\Cinder-PortAudio\lib\ASIOSDK\host\pc</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\Resources.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resources.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

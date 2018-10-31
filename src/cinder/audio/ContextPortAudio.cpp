@@ -33,7 +33,7 @@ POSSIBILITY OF SUCH DAMAGE.
 //#define LOG_XRUN( stream )	    ( (void)( 0 ) )
 
 #define LOG_CI_PORTAUDIO( stream )	CI_LOG_I( stream )
-//#define LOG_CINDER_PORTAUDIO( stream )	    ( (void)( 0 ) )
+//#define LOG_CI_PORTAUDIO( stream )	    ( (void)( 0 ) )
 
 //#define LOG_CAPTURE( stream )	CI_LOG_I( stream )
 #define LOG_CAPTURE( stream )	    ( (void)( 0 ) )
@@ -241,6 +241,8 @@ struct InputDeviceNodePortAudio::Impl {
 			mConverter = audio::dsp::Converter::create( deviceSampleRate, mParent->getSampleRate(), numChannels, numChannels, deviceFramesPerBlock );
 			mConverterDestBuffer.setSize( mConverter->getDestMaxFramesPerBlock(), numChannels );
 			mMaxReadFrames = deviceFramesPerBlock;
+
+			LOG_CI_PORTAUDIO( "created converter, max source frames: " << mConverter->getSourceMaxFramesPerBlock() << ", max dest frames: " << mConverter->getDestMaxFramesPerBlock() );
 		}
 		else {
 			mMaxReadFrames = framesPerBlock;
@@ -274,54 +276,55 @@ struct InputDeviceNodePortAudio::Impl {
 		signed long readAvailable = Pa_GetStreamReadAvailable( mStream );
 		CI_ASSERT( readAvailable >= 0 );
 		LOG_CAPTURE( "[" << mParent->getContext()->getNumProcessedFrames() << "] read available: " << readAvailable << ", ring buffer write available: " << mRingBuffers[0].getAvailableWrite() );
-		if( readAvailable <= 0 )
-			return;
 
-		unsigned long framesToRead = min( (unsigned long)readAvailable, (unsigned long)mMaxReadFrames );
-		mReadBuffer.setNumFrames( framesToRead );
-		if( numChannels == 1 ) {
-			// capture directly into mReadBuffer
-			PaError err = Pa_ReadStream( mStream, mReadBuffer.getData(), framesToRead );
-			CI_VERIFY( err == paNoError );
-		}
-		else {
-			// read into audioBuffer, then de-interleave into mReadBuffer
-			// TODO: does it make sense to pass in the audioBuffer here?
-			// - might also be too small when downsampling (ex. input: 48k, output: 44.1k)
-			PaError err = Pa_ReadStream( mStream, audioBuffer, framesToRead );
-			CI_VERIFY( err == paNoError );
-			dsp::deinterleave( (float *)audioBuffer, mReadBuffer.getData(), framesPerBuffer, numChannels, framesPerBuffer );
-		}
-
-		// write to ring buffer, use Converter if one was installed
-		if( mConverter ) {
-			pair<size_t, size_t> count = mConverter->convert( &mReadBuffer, &mConverterDestBuffer );
-			LOG_CAPTURE( "\t- frames read: " << framesToRead << ", converted: " << count.second );
-			for( size_t ch = 0; ch < numChannels; ch++ ) {
-				if( ! mRingBuffers[ch].write( mConverterDestBuffer.getChannel( ch ), count.second ) ) {
-					LOG_XRUN( "[" << mParent->getContext()->getNumProcessedFrames() << "] buffer overrun (with converter). failed to read from ringbuffer,  num samples to write: " << count.second << ", channel: " << ch );
-					mParent->markOverrun();
-				}
+		while( readAvailable > 0 ) {
+			unsigned long framesToRead = min( (unsigned long)readAvailable, (unsigned long)mMaxReadFrames );
+			mReadBuffer.setNumFrames( framesToRead );
+			if( numChannels == 1 ) {
+				// capture directly into mReadBuffer
+				PaError err = Pa_ReadStream( mStream, mReadBuffer.getData(), framesToRead );
+				CI_VERIFY( err == paNoError );
+			}
+			else {
+				// read into audioBuffer, then de-interleave into mReadBuffer
+				// TODO: does it make sense to pass in the audioBuffer here?
+				// - might also be too small when downsampling (ex. input: 48k, output: 44.1k)
+				PaError err = Pa_ReadStream( mStream, audioBuffer, framesToRead );
+				CI_VERIFY( err == paNoError );
+				dsp::deinterleave( (float *)audioBuffer, mReadBuffer.getData(), framesPerBuffer, numChannels, framesPerBuffer );
 			}
 
-			mNumFramesBuffered += count.second;
-			mTotalFramesCaptured += count.second;
-		}
-		else {
-			LOG_CAPTURE( "\t- frames read: " << framesToRead );
-			for( size_t ch = 0; ch < numChannels; ch++ ) {
-				if( ! mRingBuffers[ch].write( mReadBuffer.getChannel( ch ), framesToRead ) ) {
-					LOG_XRUN( "[" << mParent->getContext()->getNumProcessedFrames() << "] buffer overrun. failed to read from ringbuffer, num samples to write: " << framesToRead << ", channel: " << ch );
-					mParent->markOverrun();
-					return;
+			// write to ring buffer, use Converter if one was installed
+			if( mConverter ) {
+				pair<size_t, size_t> count = mConverter->convert( &mReadBuffer, &mConverterDestBuffer );
+				LOG_CAPTURE( "\t- frames read: " << framesToRead << ", converted: " << count.second );
+				for( size_t ch = 0; ch < numChannels; ch++ ) {
+					if( ! mRingBuffers[ch].write( mConverterDestBuffer.getChannel( ch ), count.second ) ) {
+						LOG_XRUN( "[" << mParent->getContext()->getNumProcessedFrames() << "] buffer overrun (with converter). failed to read from ringbuffer,  num samples to write: " << count.second << ", channel: " << ch );
+						mParent->markOverrun();
+					}
 				}
-			}
-			mNumFramesBuffered += framesToRead;
-			mTotalFramesCaptured += framesToRead;
-		}
 
-		LOG_CAPTURE( "[" << mParent->getContext()->getNumProcessedFrames() << "] frames buffered: " << mNumFramesBuffered << ", read available: " << readAvailable << ", ring buffer write available: " << mRingBuffers[0].getAvailableWrite() );
-		int blarg = 2;
+				mNumFramesBuffered += count.second;
+				mTotalFramesCaptured += count.second;
+			}
+			else {
+				LOG_CAPTURE( "\t- frames read: " << framesToRead );
+				for( size_t ch = 0; ch < numChannels; ch++ ) {
+					if( ! mRingBuffers[ch].write( mReadBuffer.getChannel( ch ), framesToRead ) ) {
+						LOG_XRUN( "[" << mParent->getContext()->getNumProcessedFrames() << "] buffer overrun. failed to read from ringbuffer, num samples to write: " << framesToRead << ", channel: " << ch );
+						mParent->markOverrun();
+						return;
+					}
+				}
+				mNumFramesBuffered += framesToRead;
+				mTotalFramesCaptured += framesToRead;
+			}
+
+			readAvailable = Pa_GetStreamReadAvailable( mStream );
+			LOG_CAPTURE( "[" << mParent->getContext()->getNumProcessedFrames() << "] frames buffered: " << mNumFramesBuffered << ", read available: " << readAvailable << ", ring buffer write available: " << mRingBuffers[0].getAvailableWrite() );
+			int flarg = 2;
+		}
 	}
 
 	PaStream *mStream = nullptr;

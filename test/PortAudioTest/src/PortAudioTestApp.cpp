@@ -32,6 +32,7 @@ class PortAudioTestApp : public App {
 	void testOpenStream();
 	void testSimple();
 	void testMultichannel();
+	void testInputOutput();
 	void rampGain();
 	void shiftRouteChannel();
 
@@ -42,6 +43,7 @@ class PortAudioTestApp : public App {
 	audio::MonitorNodeRef			mMonitor;
 	audio::ChannelRouterNodeRef		mChannelRouterNode;
 	size_t mCurrentChannel = 0;
+	float  mVolume = 0.4f;
 };
 
 void PortAudioTestApp::setup()
@@ -54,7 +56,8 @@ void PortAudioTestApp::setup()
 	audio::ContextPortAudio::setAsMaster();
 
 	//testSimple();
-	testMultichannel();
+	//testMultichannel();
+	testInputOutput();
 }
 
 void PortAudioTestApp::printPaInfo()
@@ -138,7 +141,7 @@ void PortAudioTestApp::testOpenStream()
 void PortAudioTestApp::testSimple()
 {
 	// sinewave -> gain (stereo) -> out
-	auto genNode = audio::master()->makeNode<audio::GenSineNode>( 440 );
+	auto genNode = audio::master()->makeNode<audio::GenSineNode>( 440.0f );
 	auto gainNode = audio::master()->makeNode<audio::GainNode>( 0.5f, audio::Node::Format().channels( 2 ) );
 
 	genNode >> gainNode >> audio::master()->getOutput();
@@ -151,11 +154,11 @@ void PortAudioTestApp::testMultichannel()
 {
 	auto ctx = audio::Context::master();
 	
-	auto dev = audio::Device::getDefaultOutput();
+	//auto dev = audio::Device::getDefaultOutput();
 	//auto dev = audio::Device::findDeviceByName( "Focusrite USB ASIO" );
 	//auto dev = audio::Device::findDeviceByName( "Realtek ASIO" ); // note: currently fails in asio code (ASIOCreateBuffers() returns -997, ASE_InvalidMode)
 	//auto dev = audio::Device::findDeviceByName( "Focusrite USB (Focusrite USB Audio)" );
-	//auto dev = audio::Device::findDeviceByName( "Speakers (Realtek High Definition Audio)" );
+	auto dev = audio::Device::findDeviceByName( "Speakers (Realtek High Definition Audio)" );
 
 	if( ! dev ) {
 		CI_LOG_E( "no device selected." );
@@ -179,6 +182,49 @@ void PortAudioTestApp::testMultichannel()
 	ctx->enable();
 }
 
+void PortAudioTestApp::testInputOutput()
+{
+	// setup simple input -> gain -> monitor -> output graph
+
+	auto ctx = audio::Context::master();
+
+	auto outputDev = audio::Device::getDefaultOutput();
+	//auto outputDev = audio::Device::findDeviceByName( "Speakers (Realtek High Definition Audio)" );
+	//auto outputDev = audio::Device::findOutputByName( "Focusrite USB (Focusrite USB Audio)" );
+	auto outputNode = ctx->createOutputDeviceNode( outputDev );
+	ctx->setOutput( outputNode );
+
+	auto inputDev = audio::Device::getDefaultInput();
+	//auto inputDev = audio::Device::findDeviceByName( "Microphone (HD Webcam C615)" );
+	//auto inputDev = audio::Device::findInputByName( "Focusrite USB (Focusrite USB Audio)" );
+	auto inputNode = ctx->createInputDeviceNode( inputDev );
+
+	mGain = ctx->makeNode( new audio::GainNode( mVolume ) );
+
+	mMonitor = ctx->makeNode( new audio::MonitorNode );
+
+	inputNode >> mGain >> mMonitor >> ctx->getOutput();
+
+	inputNode->enable();
+	ctx->enable();
+}
+
+void PortAudioTestApp::rampGain()
+{
+	mGain->getParam()->applyRamp( 0, mVolume, 0.5f );
+	mGain->getParam()->appendRamp( 0, 0.5f );
+}
+
+void PortAudioTestApp::shiftRouteChannel()
+{
+	mCurrentChannel = ( mCurrentChannel + 1 ) % mChannelRouterNode->getNumChannels();
+
+	mChannelRouterNode->disconnectAllInputs();
+	mGain->disconnectAllOutputs();
+
+	mGain >> mChannelRouterNode->route( 0, mCurrentChannel );
+}
+
 void PortAudioTestApp::printContextInfo()
 {
 	stringstream str;
@@ -192,22 +238,6 @@ void PortAudioTestApp::printContextInfo()
 	str << "--------------------------------------------------" << endl;
 
 	CI_LOG_I( str.str() );
-}
-
-void PortAudioTestApp::rampGain()
-{
-	mGain->getParam()->applyRamp( 0, 0.4, 0.5f );
-	mGain->getParam()->appendRamp( 0, 0.5f );
-}
-
-void PortAudioTestApp::shiftRouteChannel()
-{
-	mCurrentChannel = ( mCurrentChannel + 1 ) % mChannelRouterNode->getNumChannels();
-
-	mChannelRouterNode->disconnectAllInputs();
-	mGain->disconnectAllOutputs();
-
-	mGain >> mChannelRouterNode->route( 0, mCurrentChannel );
 }
 
 void PortAudioTestApp::mouseDown( MouseEvent event )
@@ -233,11 +263,31 @@ void PortAudioTestApp::keyDown( KeyEvent event )
 	else if( event.getChar() == 'p' ) {
 		printContextInfo();
 	}
+	else if( event.getCode() == KeyEvent::KEY_UP ) {
+		mVolume += 0.1f;
+		CI_LOG_I( "volume: " << mVolume );
+		if( mGain ) {
+			mGain->getParam()->applyRamp( mVolume, 0.3f );
+		}
+	}
+	else if( event.getCode() == KeyEvent::KEY_DOWN ) {
+		mVolume = max<float>( 0.0f, mVolume - 0.1f );
+		CI_LOG_I( "volume: " << mVolume );
+		if( mGain ) {
+			mGain->getParam()->applyRamp( mVolume, 0.3f );
+		}
+	}
+	else if( event.getChar() == 'c' ) {
+		CI_LOG_I( "clearing graph and switching to simple output" );
+
+		audio::master()->disconnectAllNodes();
+		testSimple();
+	}
 }
 
 void PortAudioTestApp::update()
 {
-	if( mGain->getParam()->getNumEvents() == 0 ) {
+	if( mChannelRouterNode && mGain->getParam()->getNumEvents() == 0 ) {
 		shiftRouteChannel();
 		rampGain();
 	}

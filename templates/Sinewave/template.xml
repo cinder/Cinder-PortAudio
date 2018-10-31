@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<cinder>
+<template name="PortAudio: Sinewave" parent="org.libcinder.apptemplates.basicopengl">
+	<requires>org.libcinder.portaudio</requires>
+	<source replaceContents="true" replaceName="true">src/_TBOX_PREFIX_App.cpp</source>
+</template>
+</cinder>

@@ -31,7 +31,7 @@ void PortAudioBasicApp::setup()
 	audio::ContextPortAudio::setAsMaster();
 
 	// uncomment to set a specific device as output
-	audio::master()->setOutput( audio::master()->createOutputDeviceNode( audio::Device::findDeviceByName( "Speakers (Realtek High Definition Audio)" ) ) );
+	//audio::master()->setOutput( audio::master()->createOutputDeviceNode( audio::Device::findDeviceByName( "Speakers (Realtek High Definition Audio)" ) ) );
 
 	// setup basic audio graph
 	auto genNode = audio::master()->makeNode<audio::GenSineNode>( 440.0f );

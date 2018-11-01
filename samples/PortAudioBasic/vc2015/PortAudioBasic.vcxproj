@@ -141,7 +141,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..\include;..\..\..\..\..\include;..\..\..\src;..\..\..\lib\portaudio\include;..\..\..\lib\portaudio\src\common;..\..\..\lib\portaudio\src\os\win;..\..\..\lib\ASIOSDK\common;..\..\..\lib\ASIOSDK\host;..\..\..\lib\ASIOSDK\host\pc</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WIN32_WINNT=0x0601;_WINDOWS;NOMINMAX;_DEBUG;%(PreprocessorDefinitions);PA_USE_WASAPI=1;PA_USE_ASIO=1</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32_WINNT=0x0601;_WINDOWS;NOMINMAX;_CRT_SECURE_NO_WARNINGS;_DEBUG;%(PreprocessorDefinitions);PA_USE_WASAPI=1;PA_USE_ASIO=1</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -168,7 +168,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..\include;..\..\..\..\..\include;..\..\..\src;..\..\..\lib\portaudio\include;..\..\..\lib\portaudio\src\common;..\..\..\lib\portaudio\src\os\win;..\..\..\lib\ASIOSDK\common;..\..\..\lib\ASIOSDK\host;..\..\..\lib\ASIOSDK\host\pc</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WIN32_WINNT=0x0601;_WINDOWS;NOMINMAX;_DEBUG;%(PreprocessorDefinitions);PA_USE_WASAPI=1;PA_USE_ASIO=0</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32_WINNT=0x0601;_WINDOWS;NOMINMAX;_CRT_SECURE_NO_WARNINGS;_DEBUG;%(PreprocessorDefinitions);PA_USE_WASAPI=1;PA_USE_ASIO=0</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -197,7 +197,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..\include;..\..\..\..\..\include;..\..\..\src;..\..\..\lib\portaudio\include;..\..\..\lib\portaudio\src\common;..\..\..\lib\portaudio\src\os\win;..\..\..\lib\ASIOSDK\common;..\..\..\lib\ASIOSDK\host;..\..\..\lib\ASIOSDK\host\pc</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WIN32_WINNT=0x0601;_WINDOWS;NOMINMAX;_DEBUG;%(PreprocessorDefinitions);PA_USE_WASAPI=1;PA_USE_ASIO=1</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32_WINNT=0x0601;_WINDOWS;NOMINMAX;_CRT_SECURE_NO_WARNINGS;_DEBUG;%(PreprocessorDefinitions);PA_USE_WASAPI=1;PA_USE_ASIO=1</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeader />
@@ -223,7 +223,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..\include;..\..\..\..\..\include;..\..\..\src;..\..\..\lib\portaudio\include;..\..\..\lib\portaudio\src\common;..\..\..\lib\portaudio\src\os\win;..\..\..\lib\ASIOSDK\common;..\..\..\lib\ASIOSDK\host;..\..\..\lib\ASIOSDK\host\pc</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WIN32_WINNT=0x0601;_WINDOWS;NOMINMAX;_DEBUG;%(PreprocessorDefinitions);PA_USE_WASAPI=1;PA_USE_ASIO=0</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32_WINNT=0x0601;_WINDOWS;NOMINMAX;_CRT_SECURE_NO_WARNINGS;_DEBUG;%(PreprocessorDefinitions);PA_USE_WASAPI=1;PA_USE_ASIO=0</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeader>
@@ -250,7 +250,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <AdditionalIncludeDirectories>..\include;..\..\..\..\..\include;..\..\..\src;..\..\..\lib\portaudio\include;..\..\..\lib\portaudio\src\common;..\..\..\lib\portaudio\src\os\win;..\..\..\lib\ASIOSDK\common;..\..\..\lib\ASIOSDK\host;..\..\..\lib\ASIOSDK\host\pc</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WIN32_WINNT=0x0601;_WINDOWS;NOMINMAX;NDEBUG;%(PreprocessorDefinitions);PA_USE_WASAPI=1;PA_USE_ASIO=1</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32_WINNT=0x0601;_WINDOWS;NOMINMAX;_CRT_SECURE_NO_WARNINGS;NDEBUG;%(PreprocessorDefinitions);PA_USE_WASAPI=1;PA_USE_ASIO=1</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
@@ -279,7 +279,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_NoAsio|Win32'">
     <ClCompile>
       <AdditionalIncludeDirectories>..\include;..\..\..\..\..\include;..\..\..\src;..\..\..\lib\portaudio\include;..\..\..\lib\portaudio\src\common;..\..\..\lib\portaudio\src\os\win;..\..\..\lib\ASIOSDK\common;..\..\..\lib\ASIOSDK\host;..\..\..\lib\ASIOSDK\host\pc</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WIN32_WINNT=0x0601;_WINDOWS;NOMINMAX;NDEBUG;%(PreprocessorDefinitions);PA_USE_WASAPI=1;PA_USE_ASIO=0</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32_WINNT=0x0601;_WINDOWS;NOMINMAX;_CRT_SECURE_NO_WARNINGS;NDEBUG;%(PreprocessorDefinitions);PA_USE_WASAPI=1;PA_USE_ASIO=0</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PrecompiledHeader>
       </PrecompiledHeader>
@@ -311,7 +311,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>..\include;..\..\..\..\..\include;..\..\..\src;..\..\..\lib\portaudio\include;..\..\..\lib\portaudio\src\common;..\..\..\lib\portaudio\src\os\win;..\..\..\lib\ASIOSDK\common;..\..\..\lib\ASIOSDK\host;..\..\..\lib\ASIOSDK\host\pc</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WIN32_WINNT=0x0601;_WINDOWS;NOMINMAX;NDEBUG;%(PreprocessorDefinitions);PA_USE_WASAPI=1;PA_USE_ASIO=1</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32_WINNT=0x0601;_WINDOWS;NOMINMAX;_CRT_SECURE_NO_WARNINGS;NDEBUG;%(PreprocessorDefinitions);PA_USE_WASAPI=1;PA_USE_ASIO=1</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
@@ -339,7 +339,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_NoAsio|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>..\include;..\..\..\..\..\include;..\..\..\src;..\..\..\lib\portaudio\include;..\..\..\lib\portaudio\src\common;..\..\..\lib\portaudio\src\os\win;..\..\..\lib\ASIOSDK\common;..\..\..\lib\ASIOSDK\host;..\..\..\lib\ASIOSDK\host\pc</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WIN32_WINNT=0x0601;_WINDOWS;NOMINMAX;NDEBUG;%(PreprocessorDefinitions);PA_USE_WASAPI=1;PA_USE_ASIO=0</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32_WINNT=0x0601;_WINDOWS;NOMINMAX;_CRT_SECURE_NO_WARNINGS;NDEBUG;%(PreprocessorDefinitions);PA_USE_WASAPI=1;PA_USE_ASIO=0</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PrecompiledHeader>
       </PrecompiledHeader>

@@ -234,7 +234,7 @@ struct InputDeviceNodePortAudio::Impl {
 
 		size_t framesPerBlock = mParent->getFramesPerBlock(); // frames per block for the audio graph / context
 		size_t deviceFramesPerBlock = device->getFramesPerBlock(); // frames per block for the input device (might be different, if the samplerate is different)
-		double deviceSampleRate = device->getSampleRate();
+		size_t deviceSampleRate = device->getSampleRate();
 
 		if( deviceSampleRate != mParent->getSampleRate() ) {
 			// samplerate doesn't match the context, install Converter
@@ -260,8 +260,7 @@ struct InputDeviceNodePortAudio::Impl {
 		inputParams.channelCount = numChannels;
 		inputParams.sampleFormat = paFloat32;
 		inputParams.hostApiSpecificStreamInfo = NULL;
-
-		inputParams.suggestedLatency = framesPerBlock / deviceSampleRate;	
+		inputParams.suggestedLatency = (PaTime)framesPerBlock / (PaTime)deviceSampleRate;	
 
 		PaStreamFlags flags = 0;
 		PaError err = Pa_OpenStream( &mStream, &inputParams, nullptr, deviceSampleRate, framesPerBlock, flags, nullptr, nullptr );

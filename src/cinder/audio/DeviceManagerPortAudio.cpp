@@ -145,7 +145,6 @@ void DeviceManagePortAudio::rebuildDevices()
 	mDeviceInfoSet.clear();
 
 	PaDeviceIndex numDevices = Pa_GetDeviceCount();
-	CI_LOG_I( "numDevices: " << numDevices );
 	for( PaDeviceIndex i = 0; i < numDevices; i++ ) {
 		DeviceInfo devInfo;
 		auto devInfoPa = Pa_GetDeviceInfo( i );
@@ -157,7 +156,7 @@ void DeviceManagePortAudio::rebuildDevices()
 		devInfo.mKey = to_string( (int)i ) + " - " + hostInfoPa->name + " - " + devInfo.mName;
 		devInfo.mNumInputChannels = devInfoPa->maxInputChannels;
 		devInfo.mNumOutputChannels = devInfoPa->maxOutputChannels;
-		devInfo.mSampleRate = devInfoPa->defaultSampleRate;
+		devInfo.mSampleRate = (size_t)devInfoPa->defaultSampleRate;
 
 		// TODO: need to decide if this should be high, low, input or output
 		// - maybe should have DeviceManagerPortAudio-specific method for getting the range based on the DeviceRef

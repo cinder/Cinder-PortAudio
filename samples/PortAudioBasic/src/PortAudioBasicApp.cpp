@@ -5,7 +5,6 @@
 #include "cinder/audio/audio.h"
 
 #include "cinder/audio/ContextPortAudio.h"
-#include "cinder/audio/DeviceManagerPortAudio.h"
 
 using namespace ci;
 using namespace ci::app;

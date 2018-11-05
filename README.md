@@ -47,15 +47,15 @@ lib/ASIOSDK/host/asiodrivers.cpp
 lib/ASIOSDK/host/pc/asiolist.cpp
 ```
 
-PortAudio also provides some docs: ["Portaudio Windows ASIO with MSVC"](http://portaudio.com/docs/v19-doxydocs/compile_windows_asio_msvc.html)
+##### Enable Unicode Character Set
 
-#### Enabling Unicode Character Set
-
-To enable buildiing with Unicode Character Set (Configuration Properties -> General -> Character Set), you need to add the following line to the top of _lib/ASIOSDK/host/pc/asiolist.cpp_, directly above the <#include "windows.h>`:
+Most cinder projects are build with Unicode Character Set (Configuration Properties -> General -> Character Set) and to make ASIO compatible with this, you need to add the following line to the top of _lib/ASIOSDK/host/pc/asiolist.cpp_, directly above the <#include "windows.h>`:
 
 ```
 #undef UNICODE
 ```
+
+For more details on this, see the PortAudio docs: ["Portaudio Windows ASIO with MSVC"](http://portaudio.com/docs/v19-doxydocs/compile_windows_asio_msvc.html)
 
 ### Debugging
 

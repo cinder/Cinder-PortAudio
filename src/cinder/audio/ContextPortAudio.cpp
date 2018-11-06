@@ -74,7 +74,7 @@ struct OutputDeviceNodePortAudio::Impl {
 // ----------------------------------------------------------------------------------------------------
 
 OutputDeviceNodePortAudio::OutputDeviceNodePortAudio( const DeviceRef &device, const Format &format )
-	: OutputDeviceNode( device, format ), mImpl( new Impl( this ) ), mFullDuplexIO( false ), mFullDuplexInputDeviceNode( false )
+	: OutputDeviceNode( device, format ), mImpl( new Impl( this ) ), mFullDuplexIO( false ), mFullDuplexInputDeviceNode( nullptr )
 {
 	LOG_CI_PORTAUDIO( "device key: " << device->getKey() );
 	LOG_CI_PORTAUDIO( "device channels: " << device->getNumOutputChannels() << ", samplerate: " << device->getSampleRate() << ", framesPerBlock: " << device->getFramesPerBlock() );

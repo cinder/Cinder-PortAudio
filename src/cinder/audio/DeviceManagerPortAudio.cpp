@@ -26,6 +26,8 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include "portaudio.h"
 
+#include <math.h>
+
 using namespace std;
 
 namespace cinder { namespace audio {

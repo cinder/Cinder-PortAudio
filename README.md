@@ -4,7 +4,7 @@ PortAudio audio backend for cinder.
 
 ## Supported Platforms
 
-Currently this has only been tested on Windows Desktop, out of need for an ASIO backend. More will be added as needed. Supporting other platforms shouldn't be much more than a matter of getting the project configuration setup, if you'd like to help out with that then please discuss with issues or send a pull request.
+Initial development was done on Windows 10 Desktop, with a focus on enabling the ASIO backend, with included VS 2015 project files. @PetrosKataras added CMake support, which can be used on most other platforms (Linux, Mac OS X, etc).
 
 ### Installation
 
@@ -71,4 +71,3 @@ If using Visual Studio, you also need the following to see the logs in the conso
 ```
 PA_ENABLE_MSVC_DEBUG_OUTPUT
 ```
-

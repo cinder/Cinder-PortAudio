@@ -30,9 +30,16 @@ Also see the [PortAudioBasic](samples/PortAudioBasic/src/PortAudioBasicApp.cpp) 
 
 ### Enabling Windows ASIO backend
 
-For ASIO support, download ASIO Sdk from the Steinberg website [here](https://www.steinberg.net/en/company/developers.html), unzip and move to a folder at `lib/ASIOSDK`.
+For ASIO support on Windows, the simplest approach is to run the included `lib\install_msw_asio.ps1` from a Command Prompt:
 
-Then make sure that the following preprocessor macro is defined in our project:
+```
+cd <Path to Cinder-PortAudio>
+powershell lib\install_msw_asio.ps1
+```
+
+Alternatively, the following can be done by hand. Download the ASIO SDK from the Steinberg website [here](https://www.steinberg.net/en/company/developers.html), unzip, and move to a folder at `lib/ASIOSDK`.
+
+Then make sure that the following preprocessor macro is defined in your project:
 
 ```
 PA_USE_ASIO=1
@@ -49,7 +56,7 @@ lib/ASIOSDK/host/pc/asiolist.cpp
 
 ##### Enable Unicode Character Set
 
-Most cinder projects are build with Unicode Character Set (Configuration Properties -> General -> Character Set) and to make ASIO compatible with this, you need to add the following line to the top of _lib/ASIOSDK/host/pc/asiolist.cpp_, directly above the <#include "windows.h>`:
+Most Cinder projects are build with Unicode Character Set (Configuration Properties -> General -> Character Set) and to make ASIO compatible with this, you need to add the following line to the top of _lib/ASIOSDK/host/pc/asiolist.cpp_, directly above the `<#include "windows.h>`:
 
 ```
 #undef UNICODE
